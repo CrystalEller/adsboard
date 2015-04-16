@@ -1,0 +1,79 @@
+<?php echo $this->doctype(); ?>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <?php echo $this->headTitle('AdsBoard')->setAutoEscape(false) ?>
+
+    <?php echo $this->headMeta()
+        ->appendName('viewport', 'width=device-width, initial-scale=1.0')
+        ->appendHttpEquiv('X-UA-Compatible', 'IE=edge')
+    ?>
+
+    <!-- Le styles -->
+    <?php echo $this->headLink(array('rel' => 'shortcut icon', 'type' => 'image/vnd.microsoft.icon', 'href' => $this->basePath() . '/img/favicon.ico'))
+        ->prependStylesheet($this->basePath() . '/css/style.css')
+        ->prependStylesheet($this->basePath() . '/css/bootstrap-theme.min.css')
+        ->prependStylesheet($this->basePath() . '/css/bootstrap.css') ?>
+
+    <!-- Scripts -->
+    <?php echo $this->headScript()
+        ->prependFile($this->basePath() . '/js/bootstrap.min.js')
+        ->prependFile($this->basePath() . '/js/jquery.min.js')
+        ->prependFile($this->basePath() . '/js/respond.min.js', 'text/javascript', array('conditional' => 'lt IE 9',))
+        ->prependFile($this->basePath() . '/js/html5shiv.js', 'text/javascript', array('conditional' => 'lt IE 9',)); ?>
+
+</head>
+<body>
+<div class="container">
+    <nav class="navbar navbar-default" id="main-navbar">
+        <div class="container-fluid">
+
+            <div class="navbar-header">
+                <a class="navbar-brand" href="<?= $this->url('home') ?>">AdsBoard</a>
+            </div>
+
+            <div class="container collapse navbar-collapse">
+                <form class="navbar-form navbar-left" role="search">
+                    <div class="form-group">
+                        <select class="form-control">
+                            <option selected disabled>Вся Украина</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" class="form-control" size="40" placeholder="Ввведите, то что ищите">
+                    </div>
+                    <div class="form-group">
+                        <select class="form-control">
+                            <option selected disabled>Выбрать категорию</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-default">Поиск</button>
+                    </div>
+                </form>
+                <ul class="nav navbar-nav navbar-right">
+                    <?php if ($user = $this->identity()) { ?>
+                        <li><a style="margin-top: -11px" href="<?php echo $this->url('registration'); ?>">Ваши<br>объявления</a>
+                        </li>
+                        <li><a href="<?php echo $this->url('logout'); ?>">Выход</a></li>
+                    <?php } else { ?>
+                        <li><a href="<?php echo $this->url('registration'); ?>">Регистрация</a></li>
+                        <li><a href="<?php echo $this->url('login'); ?>">Вход</a></li>
+                    <?php } ?>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</div>
+<div class="container">
+    <?php echo $this->content; ?>
+    <hr>
+    <footer>
+        <p>&copy; <?php echo date('Y') ?> by MaxTech</p>
+    </footer>
+</div>
+<!-- /container -->
+<?php echo $this->inlineScript() ?>
+</body>
+</html>

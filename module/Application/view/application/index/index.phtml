@@ -1,0 +1,9 @@
+<div class="row row-buffer">
+    <div id="add-ads" class="col-lg-4 col-lg-push-8">
+        <a href="<?= $this->url('showFormAds') ?>" class="btn btn-default btn-lg btn-block">
+            <span class="glyphicon glyphicon-plus-sign"></span>Добавить объявление
+        </a>
+    </div>
+</div>
+
+<?php echo !empty($this->ads) ? $this->ads : ''; ?>

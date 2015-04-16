@@ -1,0 +1,97 @@
+<?php echo $this->headLink()
+    ->prependStylesheet($this->basePath() . '/css/registration.css')
+?>
+<div class="container">
+    <div class="row row-buffer">
+        <div class="col-lg-4 col-lg-push-4">
+            <form action="<?= $this->url('registration') ?>" method="post" id="registration">
+                <div class="form-group">
+                    <label for="InputEmail1">Введите email</label>
+                    <input type="email" name="email" class="form-control" id="InputEmail1"
+                           value="<?= $form->get('email')->getValue(); ?>">
+
+                    <p class="text-right">
+                        <span class="text-danger">
+                            <?= implode($form->get('email')->getMessages()); ?>
+                        </span>
+                    </p>
+                </div>
+                <div class="form-group">
+                    <label for="InputPassword1">Введите пароль</label>
+                    <input type="password" name="password1" class="form-control" id="InputPassword1">
+
+                    <p class="text-right">
+                        <span class="text-danger">
+                            <?= implode($form->get('password1')->getMessages()); ?>
+                        </span>
+                    </p>
+                </div>
+                <div class="form-group">
+                    <label for="InputPassword2">Подвердите пароль</label>
+                    <input type="password" name="password2" class="form-control" id="InputPassword2">
+
+                    <p class="text-right">
+                        <span class="text-danger">
+                            <?= implode($form->get('password2')->getMessages()); ?>
+                        </span>
+                    </p>
+                </div>
+                <div id="captcha" class="form-group">
+                    <?php
+                    $captchaName = 'captcha';
+                    $captcha = $form->get($captchaName)->getCaptcha();
+                    $captcha->generate();
+                    ?>
+
+                    <div class="col-lg-4">
+                        <img width="<?= $captcha->getWidth() ?>" height="<?= $captcha->getHeight() ?>"
+                             src="<?= $captcha->getImgUrl() . $captcha->getId() . $captcha->getSuffix(); ?>"
+                             alt="<?= $captcha->getImgAlt() ?>">
+                    </div>
+                    <div class="col-lg-8">
+                        <input type="text" class="form-control input-lg" name="<?= $captchaName ?>[input]"
+                               id="InputCaptcha" placeholder="Проверка на робота">
+
+                        <p class="text-right">
+                                <span class="text-danger">
+                                    <?= implode($form->get('captcha')->getMessages()); ?>
+                                </span>
+                        </p>
+                    </div>
+                    <input type="hidden" value="<?= $captcha->getId() ?>" name="<?= $captchaName ?>[id]">
+
+                </div>
+                <div class="form-group text-right">
+                    <button type="submit" class="btn btn-default">Регистрация</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    /*        $("#registration").submit(function(e){
+     $.ajax({
+     type: "POST",
+     url: $(e.srcElement).attr('action'),
+     dataType: 'json',
+     data: (function(){
+     var data={};
+     data['captcha'] = {
+     "input":$('input[name="captcha[input]"]').val(),
+     "id":$('input[name="captcha[id]"]').val()
+     };
+     $('#registration input:not([name*="["])').each(function( index, element ) {
+     data[$(element).attr('name')] = $(element).val();
+     });
+     return data;
+     })()
+     }).done(function( msg ) {
+     $.each( msg, function(key,value ) {
+     $('input[name="'+key+'[input]"]+p span').text(value);
+     $('input[name='+key+']+p span').text(value);
+     });
+     });
+     e.preventDefault();
+     });*/
+</script>

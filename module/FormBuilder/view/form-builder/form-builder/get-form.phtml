@@ -1,0 +1,37 @@
+<?php echo $this->headScript()
+    ->appendFile($this->basePath() . '/js/form-builder/jquery.serialize-object.min.js')
+    ->appendFile($this->basePath() . '/js/form-builder/field-edit-form.js')
+    ->appendFile($this->basePath() . '/js/form-builder/form-field.js')
+    ->appendFile($this->basePath() . '/js/form-builder/form-builder.js'); ?>
+<?php echo $this->headLink()->prependStylesheet($this->basePath() . '/css/form-builder.css') ?>
+
+<div id='form-builder' class="container-fluid">
+    <div id="form-elements" class="col-lg-6">
+
+    </div>
+    <div id="fields-select" class="col-lg-6">
+        <table class="table">
+            <tr>
+                <td class="col-lg-6">
+                    <button id="SingleLineText" class="btn btn-default btn-block">Single Line Text</button>
+                </td>
+                <td class="col-lg-6">
+                    <button id="ParagraphText" class="btn btn-default btn-block">Paragraph Text</button>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-lg-6">
+                    <button id="MultipleChoices" class="btn btn-default btn-block">Multiple Choices</button>
+                </td>
+                <td class="col-lg-6">
+                    <button id="Checkboxes" class="btn btn-default btn-block">Checkboxes</button>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-lg-6">
+                    <button id="DropDown" class="btn btn-default btn-block">Drop Down</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>

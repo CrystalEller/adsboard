@@ -1,0 +1,10 @@
+#form-elements .element-buttons {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    margin-bottom: 15px;
+}
+
+#form-elements .element-row {
+    position: relative;
+}

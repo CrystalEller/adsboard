@@ -1,0 +1,328 @@
+<?php $this->headScript()
+    ->appendFile($this->basePath() . 'js/form-builder/form-field.js')
+    ->appendFile($this->basePath() . 'js/jquery-img-upload.js') ?>
+<?php echo $this->headLink()
+    ->prependStylesheet($this->basePath() . 'css/jquery-img-upload.css') ?>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="page-header">
+            <h3>Подать объявление</h3>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-6 col-lg-push-3">
+            <form id="ads-create" action="/createAds" class="form-horizontal" method="post"
+                  enctype="multipart/form-data">
+                <div class="form-group">
+                    <label class="control-label">Область</label>
+                    <select id="region" name="region" class="form-control selectpicker">
+                        <option value="" selected disabled>-- Выберете область --</option>
+                        <?php foreach ($regions as $region): ?>
+                            <option value="<?= $region['id'] ?>"><?= $region['name'] ?></option>
+                        <?php endforeach ?>
+                    </select>
+                    <span class="help-block"></span>
+                </div>
+                <div class="form-group hide">
+                    <label class="control-label">Город</label>
+                    <select id="city" name="city" class="form-control selectpicker">
+                        <option value="default" selected disabled>-- Выберете город --</option>
+                    </select>
+                    <span class="help-block"></span>
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Категория</label>
+                    <select id="main-category" name="category[0]" class="form-control selectpicker">
+                        <option value="0" selected>-- Выберете категорию --</option>
+                        <?php foreach ($cats as $cat): ?>
+                            <option value="<?= $cat['id'] ?>"><?= $cat['name'] ?></option>
+                        <?php endforeach ?>
+                    </select>
+                    <span class="help-block"></span>
+                </div>
+                <div class="form-group hide">
+                    <label class="control-label">Подкатегория</label>
+                    <select class="form-control selectpicker subcategory">
+                        <option value="0" selected>-- Выберете подкатегорию --</option>
+                    </select>
+                    <span class="help-block"></span>
+                </div>
+                <div id="attributes" class="form-group hide">
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Заголовок</label>
+                    <input type="text" class="form-control" name="title" placeholder="Ввведите заголовок">
+                    <span class="help-block"></span>
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Описание</label>
+                    <textarea rows="10" cols="20" class="form-control" name="description"
+                              placeholder="Описание товара"></textarea>
+                    <span class="help-block"></span>
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Цена</label>
+
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="price" value=""
+                                       placeholder="Ввведите цену">
+                                <span class="input-group-btn">
+                                    <select class="btn btn-default selectpicker" name="currency">
+                                        <?php foreach ($currencies as $currency): ?>
+                                            <option value="<?= $currency['id'] ?>"><?= $currency['name'] ?></option>
+                                        <?php endforeach ?>
+                                    </select>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-lg-3">
+                            <div class="checkbox">
+                                <label>
+                                    <input id="no-price" type="checkbox" name="no-price" value="no-price"> Договорная
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="help-block"></span>
+                </div>
+                <div class="form-group jFilter">
+                    <label class="control-label">Фото</label>
+                    <a class="btn btn-default file_input" data-jfiler-name="files"
+                       data-jfiler-extensions="jpg, jpeg, png, gif"><i class="icon-jfi-paperclip"></i> Выбрать
+                        изображение</a>
+                    <span class="help-block"></span>
+                </div>
+                <div class="form-group text-right">
+                    <button type="submit" class="btn btn-default">Опубликовать</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    $(document).ready(function () {
+        var categoryGroupId = 0;
+
+        $('#region').change(function () {
+            var target = $(this);
+            $.ajax({
+                type: 'POST',
+                url: '/getCities',
+                dataType: 'json',
+                data: {regionid: target.val()},
+                success: function (data) {
+                    var $city = $('#city');
+                    $city.find(':not(:disabled)').remove();
+                    $city.find(':disabled').prop('selected', true);
+                    $city.parent('div').removeClass('hide');
+                    $.each(data['cities'], function (index, value) {
+                        $('#city').append(
+                            $('<option>')
+                                .attr('value', value['id'])
+                                .text(value['name']))
+                    });
+                },
+                fail: function (xhr) {
+                    alert(xhr.status + ' ' + xhr.responseText)
+                }
+            });
+        });
+        $('#main-category').change(function () {
+            var target = $(this);
+            target.parent('div').nextAll('div:not(.hide)').has('.subcategory').remove();
+            $('#attributes').addClass('hide').find('div>*').remove();
+            genSubcategoryElem(target.val());
+        });
+        $('#no-price').click(function () {
+            if (this.checked) {
+                $('[name=price]').prop('disabled', true);
+            } else {
+                $('[name=price]').prop('disabled', false);
+            }
+        });
+        $('#ads-create').submit(function () {
+            var target = $(this);
+
+            if ($('.jFilter input').length > 1) {
+                $('.jFilter input:first').remove();
+            } else {
+                $('.jFilter input:first').prop("disabled", "disabled");
+            }
+            var formData = new FormData(this);
+
+            $.ajax({
+                type: "POST",
+                url: target.attr('action'),
+                data: formData,
+                dataType: 'json',
+                processData: false,
+                contentType: false,
+                success: function (data) {
+                    $('.jFilter input:first').removeProp("disabled");
+
+                    if (data.success) {
+                        window.location.href = data.redirect;
+                    } else {
+                        $('.help-block')
+                            .html('')
+                            .closest('div.has-error')
+                            .removeClass('has-error')
+                            .addClass('has-success');
+
+                        $.each(data.formErrors, function (name, value) {
+                            var $elem = $('[name^=' + name + ']');
+                            var errors = '';
+
+                            $.each(value, function (index, value) {
+                                errors += value;
+
+                                if (!isNaN(parseFloat(index))) {
+                                    $elem = $elem.filter('[name*="[' + index + ']"]');
+                                }
+                                $elem.closest('div.form-group')
+                                    .addClass('has-error')
+                                    .find('span.help-block')
+                                    .html(errors + '\n');
+                            });
+                        });
+                    }
+                }
+            });
+
+            return false;
+        });
+
+        $('.file_input').filer({
+            showThumbs: true,
+            limit: 9,
+            maxSize: 45,
+            templates: {
+                box: '<ul class="jFiler-item-list"></ul>',
+                item: '<li class="jFiler-item">\
+                            <div class="jFiler-item-container">\
+                                <div class="jFiler-item-inner">\
+                                    <div class="jFiler-item-thumb">\
+                                        <div class="jFiler-item-status"></div>\
+                                        <div class="jFiler-item-info">\
+                                            <span class="jFiler-item-title"><b title="{{fi-name}}">{{fi-name | limitTo: 25}}</b></span>\
+                                        </div>\
+                                        {{fi-image}}\
+                                    </div>\
+                                    <div class="jFiler-item-assets jFiler-row">\
+                                        <ul class="list-inline pull-left">\
+                                            <li><span class="jFiler-item-others">{{fi-icon}} {{fi-size2}}</span></li>\
+                                        </ul>\
+                                        <ul class="list-inline pull-right">\
+                                            <li><a class="icon-jfi-trash jFiler-item-trash-action"></a></li>\
+                                        </ul>\
+                                    </div>\
+                                </div>\
+                            </div>\
+                        </li>',
+                itemAppend: '<li class="jFiler-item">\
+                            <div class="jFiler-item-container">\
+                                <div class="jFiler-item-inner">\
+                                    <div class="jFiler-item-thumb">\
+                                        <div class="jFiler-item-status"></div>\
+                                        <div class="jFiler-item-info">\
+                                            <span class="jFiler-item-title"><b title="{{fi-name}}">{{fi-name | limitTo: 25}}</b></span>\
+                                        </div>\
+                                        {{fi-image}}\
+                                    </div>\
+                                    <div class="jFiler-item-assets jFiler-row">\
+                                        <ul class="list-inline pull-left">\
+                                            <span class="jFiler-item-others">{{fi-icon}} {{fi-size2}}</span>\
+                                        </ul>\
+                                        <ul class="list-inline pull-right">\
+                                            <li><a class="icon-jfi-trash jFiler-item-trash-action"></a></li>\
+                                        </ul>\
+                                    </div>\
+                                </div>\
+                            </div>\
+                        </li>',
+                progressBar: '<div class="bar"></div>',
+                itemAppendToEnd: true,
+                removeConfirmation: true,
+                _selectors: {
+                    list: '.jFiler-item-list',
+                    item: '.jFiler-item',
+                    progressBar: '.bar',
+                    remove: '.jFiler-item-trash-action'
+                }
+            },
+            addMore: true
+        });
+
+        function genSubcategoryElem(pCategoryId) {
+            $.ajax({
+                type: 'POST',
+                url: '/getCategories',
+                dataType: 'json',
+                data: {pid: pCategoryId},
+                success: function (data) {
+                    if (data['cats'].length) {
+                        var $wrapDiv = $('.subcategory').last().parent('div');
+                        var $wrapDivClone = $wrapDiv.clone();
+                        var $subCat = $wrapDivClone.find('.subcategory');
+
+                        $wrapDiv.after($wrapDivClone);
+                        $subCat.attr('name', 'category[' + ++categoryGroupId + ']');
+                        $subCat.find(':not([value="0"])').remove();
+                        $subCat.parent('div').removeClass('hide');
+
+                        $subCat.change(function () {
+                            var target = $(this);
+                            $('#attributes').addClass('hide').find('div>*').remove();
+                            target.nextAll('div').has('.subcategory').remove();
+                            genSubcategoryElem(target.val());
+                        });
+
+                        $.each(data['cats'], function (index, value) {
+                            $subCat.append(
+                                $('<option>')
+                                    .attr('value', value['id'])
+                                    .text(value['name']))
+                        });
+                    } else {
+                        getAttributes(pCategoryId);
+                    }
+                },
+                fail: function (xhr) {
+                    alert(xhr.status + ' ' + xhr.responseText);
+                }
+            });
+        }
+
+        function getAttributes(catid) {
+            $.ajax({
+                type: 'POST',
+                url: '/getForm/' + catid,
+                dataType: 'json',
+                data: {catid: catid},
+                success: function (data) {
+                    if (data['fields'].length) {
+                        $.each(data['fields'], function (index, field) {
+                            var formElem = new FormField(field.type, field);
+                            var field = formElem.generateField($('<div class="form-group row"></div>'));
+                            $('#attributes').removeClass('hide').append(field);
+                            var label = field.children('label');
+                            var input = field.children(':not(label)');
+                            label.addClass('control-label').wrap($('<div class="col-lg-6 text-right " ></div>'));
+                            input.wrapAll($('<div class="col-lg-6 text-left "></div>'));
+                            input.after($('<span>').addClass('help-block'))
+                        });
+                    }
+                },
+                fail: function (xhr) {
+                    alert(xhr.status + ' ' + xhr.responseText);
+                }
+            });
+        }
+    });
+
+</script>
