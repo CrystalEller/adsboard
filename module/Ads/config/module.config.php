@@ -43,16 +43,40 @@ return array(
                     ),
                 ),
             ),
-            'getAdsByCategory' => array(
+            'mainCategories' => array(
                 'type' => 'Zend\Mvc\Router\Http\Segment',
                 'options' => array(
-                    'route' => '/getAdsByCategory[/:id]',
+                    'route' => '/category',
+                    'defaults' => array(
+                        'controller' => 'Ads\Controller\Ads',
+                        'action' => 'mainCategories',
+                    )
+                ),
+            ),
+            'adsByCategory' => array(
+                'type' => 'Zend\Mvc\Router\Http\Segment',
+                'options' => array(
+                    'route' => '/category/:catId',
                     'constraints' => array(
-                        'id' => '\d+'
+                        'catId' => '\d+'
                     ),
                     'defaults' => array(
                         'controller' => 'Ads\Controller\Ads',
-                        'action' => 'getAdsByCategory',
+                        'action' => 'adsByCategory',
+                    )
+                ),
+            ),
+            'adsByAttributeValues' => array(
+                'type' => 'Zend\Mvc\Router\Http\Segment',
+                'options' => array(
+                    'route' => '/category/:catId/attribute/:attrId',
+                    'constraints' => array(
+                        'catId' => '\d+',
+                        'attrId' => '\d+'
+                    ),
+                    'defaults' => array(
+                        'controller' => 'Ads\Controller\Ads',
+                        'action' => 'adsByAttributeValues',
                     )
                 )
             ),
