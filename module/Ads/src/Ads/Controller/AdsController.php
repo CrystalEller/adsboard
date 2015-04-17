@@ -171,8 +171,10 @@ class AdsController extends AbstractActionController
 
         $ads = $selector->getAdsByCategories($page);
         $categories = $this->em()
-            ->createQuery('Select c.{name, id} from Application\Entity\Categories c WHERE c.id=c.root')
+            ->createQuery('Select partial c.{name, id} from Application\Entity\Categories c WHERE c.id=c.root')
             ->getResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
+
+        var_dump($selector->countAdsByAttributes(1));
 
         return new ViewModel(array(
             'ads' => $ads,
@@ -185,12 +187,60 @@ class AdsController extends AbstractActionController
 
     public function adsByCategoryAction()
     {
+        $request = $this->getRequest();
+        $page = $request->getQuery('page', 0);
+        $catId = $this->params('catId', 0);
+        $selector = $this->getServiceLocator()->get('Ads\Service\AdsSelector');
 
+        $category = $this->em()
+            ->find('Application\Entity\Categories', $catId);
+
+        if (!empty($category)) {
+            $catsIds = array();
+            $cats = $this->nsm('Application\Entity\Categories')
+                ->wrapNode($category)
+                ->getDescendants();
+
+            if (!empty($cats)) {
+                $catsData = array();
+
+                foreach ($cats as $cat) {
+                    $catsData[]['id'] = $catsIds[] = $cat->getId();
+                    $catsData[]['name'] = $cat->__toString();
+                }
+            } else {
+                $catsData[]['id'] = $catsIds[] = $category->getId();
+                $catsData[]['name'] = $category->getName();
+
+                $attributes = $this->em()
+                    ->createQuery("Select a.name, c.value from Application\Entity\AdsValues c
+                                      JOIN c.attrid a
+                                      WHERE a.catid=:category")
+                    ->setParameters(array(
+                        'category' => $category->getId(),
+                    ))
+                    ->getResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
+            }
+
+            $ads = $selector->getAdsByCategories($page, $catsIds);
+
+            return new ViewModel(array(
+                'ads' => $ads,
+                'adsMenu' => array(
+                    'type' => !empty($cats) ? 'category' : 'attribute',
+                    'data' => !empty($cats) ? $catsData : $attributes
+                )
+            ));
+        } else {
+            $viewModel = new ViewModel();
+            $viewModel->setTemplate('error/404');
+            return $viewModel;
+        }
     }
 
-    public function adsByAttributeAction()
+    public function adsByAttributeValuesAction()
     {
-        
+
     }
 }
 
