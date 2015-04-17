@@ -163,14 +163,34 @@ class AdsController extends AbstractActionController
         }
     }
 
-    public function getAdsByCategoryAction()
+    public function mainCategoriesAction()
+    {
+        $request = $this->getRequest();
+        $page = $request->getQuery('page', 0);
+        $selector = $this->getServiceLocator()->get('Ads\Service\AdsSelector');
+
+        $ads = $selector->getAdsByCategories($page);
+        $categories = $this->em()
+            ->createQuery('Select c.{name, id} from Application\Entity\Categories c WHERE c.id=c.root')
+            ->getResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
+
+        return new ViewModel(array(
+            'ads' => $ads,
+            'adsMenu' => array(
+                'type' => 'category',
+                'data' => $categories
+            )
+        ));
+    }
+
+    public function adsByCategoryAction()
     {
 
     }
 
-    public function getAdsByAttributeAction()
+    public function adsByAttributeAction()
     {
-
+        
     }
 }
 
