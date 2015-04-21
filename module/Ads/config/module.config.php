@@ -66,17 +66,17 @@ return array(
                     )
                 ),
             ),
-            'adsByAttributeValues' => array(
+            'searchByFixedParams' => array(
                 'type' => 'Zend\Mvc\Router\Http\Segment',
                 'options' => array(
-                    'route' => '/category/:catId/attribute/:attrId',
+                    'route' => '/searchByFixedParams',
                     'constraints' => array(
                         'catId' => '\d+',
                         'attrId' => '\d+'
                     ),
                     'defaults' => array(
                         'controller' => 'Ads\Controller\Ads',
-                        'action' => 'adsByAttributeValues',
+                        'action' => 'searchByFixedParams',
                     )
                 )
             ),
@@ -107,6 +107,12 @@ return array(
             'Ads\Service\AdsSelector' => function ($sm) {
 
                 return new \Ads\Service\AdsSelectorService(
+                    $sm->get('doctrine.entitymanager.orm_default')
+                );
+            },
+            'Ads\Service\Search' => function ($sm) {
+
+                return new \Ads\Service\SearchService(
                     $sm->get('doctrine.entitymanager.orm_default')
                 );
             },
