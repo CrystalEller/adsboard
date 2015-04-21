@@ -102,10 +102,18 @@ FormField.prototype.generators = {
         return wrapper;
     },
     "DropDown": function (wrapper, label, data) {
-        var select = $('<select/>').addClass('selectpicker form-control').attr('id', data.id);
+        var select = $('<select/>')
+            .addClass('selectpicker form-control')
+            .attr({
+                'name': 'prop[' + data.id + ']'
+            });
         label.attr('for', data.id);
         $.each(data.values, function (index, value) {
-            select.append($('<option/>').attr('value', value).text(value));
+            select.append(
+                $('<option/>')
+                    .attr('value', value)
+                    .text(value)
+            );
         });
         return wrapper.append(select);
     }
