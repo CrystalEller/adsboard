@@ -2,8 +2,11 @@
 
 namespace Ads\Controller;
 
+use Application\Entity\AdsValues;
+use Zend\Filter\File\RenameUpload;
+use Zend\InputFilter\FileInput;
 use Zend\Mvc\Controller\AbstractActionController;
-use Zend\Session\Container;
+use DoctrineModule\Stdlib\Hydrator\DoctrineObject as DoctrineHydrator;
 use Zend\View\Model\ViewModel;
 use Zend\View\Model\JsonModel;
 use Application\Entity\Ads;
@@ -44,10 +47,12 @@ class AdsController extends AbstractActionController
             $validator = $this->getServiceLocator()
                 ->get('ValidatorManager')
                 ->get('FormBuilder');
+            $files = $request->getFiles();
+            $props = $request->getPost('prop');
 
-            $data = array_merge_recursive(
+            $data = array_merge(
                 $request->getPost()->toArray(),
-                $request->getFiles()->toArray()
+                $files->toArray()
             );
 
             $filter->setData($data);
@@ -60,7 +65,7 @@ class AdsController extends AbstractActionController
             }
 
             if (!$filter->isValid() |
-                !$validator->isValid($request->getPost('prop')) |
+                !$validator->isValid($props) |
                 !$filterPrice->isValid()
             ) {
                 $messages = array_merge(
@@ -76,38 +81,55 @@ class AdsController extends AbstractActionController
                     'formErrors' => $messages
                 ));
             } else {
-                $authService = $this->getServiceLocator()->get('Zend\Authentication\AuthenticationService');
-
-                $loggedUser = $authService->getIdentity();
-                $category = $this->em()
-                    ->getRepository('Application\Entity\Categories')
-                    ->find(intval(end(array_values($request->getPost('category')))));
-                $city = $this->em()
-                    ->getRepository('Application\Entity\City')
-                    ->find(intval($request->getPost('city')));
-                $currency = $this->em()
-                    ->getRepository('Application\Entity\Currency')
-                    ->find(intval($request->getPost('currency')));
-
-
+                $hydrator = new DoctrineHydrator($this->em());
                 $ads = new Ads();
 
-                $ads->setUserid($loggedUser)
-                    ->setCategoryid($category)
-                    ->setCityid($city)
-                    ->setDescription($request->getPost('description'))
-                    ->setTitle($request->getPost('title'));
+                $data = array(
+                    'title' => $request->getPost('title'),
+                    'description' => $request->getPost('description'),
+                    'userid' => $this->identity()->getId(),
+                    'categoryid' => end(array_values($request->getPost('category'))),
+                    'cityid' => $request->getPost('city'),
+                    'regionid' => $request->getPost('region')
+                );
 
                 if ($request->getPost('no-price') !== 'no-price') {
-                    $ads->setPrice($request->getPost('price'))
-                        ->setCurrencyid($currency);
-                } else {
-                    $ads->setPrice(0)
-                        ->setCurrencyid(null);
+                    $data['price'] = $request->getPost('price');
+                    $data['currencyid'] = $request->getPost('currency');
                 }
+
+                $ads = $hydrator->hydrate($data, $ads);
 
                 $this->em()->persist($ads);
                 $this->em()->flush();
+
+                if (!empty($props)) {
+                    foreach ($props as $id => $values) {
+                        if (!is_array($values)) {
+                            $adsValue = new AdsValues();
+                            $hydrator->hydrate(array(
+                                'attrid' => $id,
+                                'adsid' => $ads->getId(),
+                                'value' => $values
+                            ), $adsValue);
+                            $this->em()->persist($adsValue);
+                        } else {
+                            foreach ($values as $value) {
+                                $adsValue = new AdsValues();
+                                $hydrator->hydrate(array(
+                                    'attrid' => $id,
+                                    'adsid' => $ads->getId(),
+                                    'value' => $value
+                                ), $adsValue);
+                                $this->em()->persist($adsValue);
+                            }
+                        }
+                    }
+                }
+
+                $this->em()->flush();
+
+                $this->move_uploaded_imgs($files, $ads->getId());
 
                 return new JsonModel(array(
                     'success' => true,
@@ -115,6 +137,17 @@ class AdsController extends AbstractActionController
                 ));
             }
 
+        }
+    }
+
+    private function move_uploaded_imgs($files, $adsId)
+    {
+        if (!empty($files['files'])) {
+            $uploadDir = './public/img/ads/';
+            foreach ($files['files'] as $file) {
+                $newFileName = $uploadDir . $adsId . '_' . $file['name'];
+                move_uploaded_file($file['tmp_name'], $newFileName);
+            }
         }
     }
 
@@ -170,14 +203,15 @@ class AdsController extends AbstractActionController
         $selector = $this->getServiceLocator()->get('Ads\Service\AdsSelector');
 
         $ads = $selector->getAdsByCategories($page);
+        $number = $selector->countAdsByCategories();
         $categories = $this->em()
             ->createQuery('Select partial c.{name, id} from Application\Entity\Categories c WHERE c.id=c.root')
             ->getResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
 
-        var_dump($selector->countAdsByAttributes(1));
-
         return new ViewModel(array(
             'ads' => $ads,
+            'page' => $page,
+            'numberAds' => $number,
             'adsMenu' => array(
                 'type' => 'category',
                 'data' => $categories
@@ -223,9 +257,12 @@ class AdsController extends AbstractActionController
             }
 
             $ads = $selector->getAdsByCategories($page, $catsIds);
+            $number = $selector->countAdsByCategories($catsIds);
 
             return new ViewModel(array(
                 'ads' => $ads,
+                'numberAds' => $number,
+                'page' => $page,
                 'adsMenu' => array(
                     'type' => !empty($cats) ? 'category' : 'attribute',
                     'data' => !empty($cats) ? $catsData : $attributes
@@ -238,8 +275,28 @@ class AdsController extends AbstractActionController
         }
     }
 
-    public function adsByAttributeValuesAction()
+    public function searchByFixedParamsAction()
     {
+        $request = $this->getRequest();
+        $page = $request->getQuery('page', 0);
+        $data = $request->getPost();
+        $search = $this->getServiceLocator()->get('Ads\Service\Search');
+        $selector = $this->getServiceLocator()->get('Ads\Service\AdsSelector');
+
+        $ads = $search->setData($data['search'])->search($page);
+        $attrsVals = $selector->getAttrValuesByCategory($data['categoryId']);
+        $number = $search->countAds();
+
+        return new ViewModel(array(
+            'ads' => $ads,
+            'numberAds' => $number,
+            'page' => $page,
+            'adsMenu' => array(
+                'type' => 'attribute',
+                'data' => $attrsVals
+            ),
+            'search' => $data['search']
+        ));
 
     }
 }
