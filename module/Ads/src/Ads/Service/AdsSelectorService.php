@@ -34,33 +34,6 @@ class AdsSelectorService
         return $number;
     }
 
-    public function countAdsByAttributes($ids = null)
-    {
-        if (!empty($ids)) {
-            $number = $this->em
-                ->createQuery("Select COUNT(ads.id) from Application\Entity\Ads ads JOIN
-                                        Application\Entity\Categories cat WITH
-                                        ads.categoryid=cat.id JOIN
-                                        Application\Entity\CategoryAttributes attr WITH
-                                        attr.catid=cat.id
-                                        WHERE attr.id IN (:attributesId)")
-                ->setParameters(array(
-                    'attributesId' => $ids,
-                ))
-                ->getSingleScalarResult();
-        } else {
-            $number = $this->em
-                ->createQuery("Select COUNT(ads.id) from Application\Entity\Ads ads JOIN
-                                        Application\Entity\Categories cat WITH
-                                        ads.categoryid=cat.id JOIN
-                                        Application\Entity\CategoryAttributes attr WITH
-                                        attr.catid=cat.id")
-                ->getSingleScalarResult();
-        }
-
-        return $number;
-    }
-
     public function getAdsByCategories($page, array $categoriesId = null, $limit = 10)
     {
         $offset = ($page == 0) ? 0 : ($page - 1) * $limit;
@@ -85,24 +58,18 @@ class AdsSelectorService
         return $ads;
     }
 
-    public function getAdsByAttributes($page, array $attributesId, $limit = 10)
+    public function getAttrValuesByCategory($categoryId)
     {
-        $offset = ($page == 0) ? 0 : ($page - 1) * $limit;
 
-        $ads = $this->em
-            ->createQuery("Select ads from Application\Entity\Ads ads JOIN
-                                        Application\Entity\Categories cat WITH
-                                        ads.categoryid=cat.id JOIN
-                                        Application\Entity\CategoryAttributes attr WITH
-                                        attr.catid=cat.id
-                                        WHERE attr.id IN (:attributesId)")
+        $attrValues = $this->em
+            ->createQuery("Select attr.name, val.value from Application\Entity\AdsValues val
+                                            JOIN val.attrid attr
+                                            WHERE attr.catid=:categoryId")
             ->setParameters(array(
-                'attributesId' => $attributesId,
+                'categoryId' => $categoryId,
             ))
-            ->setMaxResults($limit)
-            ->setFirstResult($offset)
             ->getResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
 
-        return $ads;
+        return $attrValues;
     }
 }

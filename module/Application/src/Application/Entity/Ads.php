@@ -61,6 +61,16 @@ class Ads
     private $cityid;
 
     /**
+     * @var \Application\Entity\City
+     *
+     * @ORM\ManyToOne(targetEntity="Application\Entity\Region")
+     * @ORM\JoinColumns({
+     *   @ORM\JoinColumn(name="regionid", referencedColumnName="id")
+     * })
+     */
+    private $regionid;
+
+    /**
      * @var \Application\Entity\Currency
      *
      * @ORM\ManyToOne(targetEntity="Application\Entity\Currency")
@@ -225,6 +235,30 @@ class Ads
     public function setCityid(\Application\Entity\City $cityid = null)
     {
         $this->cityid = $cityid;
+
+        return $this;
+    }
+
+    /**
+     * Get regionid
+     *
+     * @return \Application\Entity\Region
+     */
+    public function getRegionid()
+    {
+        return $this->regionid;
+    }
+
+    /**
+     * Set regionid
+     *
+     * @param \Application\Entity\Region $regionid
+     *
+     * @return Ads
+     */
+    public function setRegionid(\Application\Entity\Region $regionid = null)
+    {
+        $this->regionid = $regionid;
 
         return $this;
     }

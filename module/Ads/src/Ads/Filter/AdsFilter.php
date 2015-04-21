@@ -105,26 +105,23 @@ class AdsFilter extends InputFilter implements InputFilterInterface
             )
         ));
 
-
         $this->add(array(
             'name' => 'files',
             'type' => 'Zend\InputFilter\FileInput',
             'required' => false,
             'validators' => array(
                 array(
-                    'name' => '\Zend\Validator\File\Extension',
+                    'name' => 'Zend\Validator\File\Extension',
                     'options' => array(
-                        array('jpeg', 'jpg', 'png')
+                        'extension' => 'jpeg,jpg,png'
                     )
                 ),
                 array(
-                    'name' => '\Zend\Validator\File\Size',
+                    'name' => 'Zend\Validator\File\Size',
                     'options' => array(
-                        array('max' => '5MB')
+                        'max' => '5MB',
+                        'min' => '10kB'
                     )
-                ),
-                array(
-                    'name' => '\Zend\Validator\File\UploadFile',
                 )
             )
         ));

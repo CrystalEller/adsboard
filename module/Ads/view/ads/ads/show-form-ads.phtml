@@ -1,6 +1,7 @@
 <?php $this->headScript()
     ->appendFile($this->basePath() . 'js/form-builder/form-field.js')
-    ->appendFile($this->basePath() . 'js/jquery-img-upload.js') ?>
+    ->appendFile($this->basePath() . 'js/jquery-img-upload.js')
+    ->appendFile($this->basePath() . 'js/jquery.form.js') ?>
 <?php echo $this->headLink()
     ->prependStylesheet($this->basePath() . 'css/jquery-img-upload.css') ?>
 
@@ -24,7 +25,7 @@
                     </select>
                     <span class="help-block"></span>
                 </div>
-                <div class="form-group hide">
+                <div class="form-group">
                     <label class="control-label">Город</label>
                     <select id="city" name="city" class="form-control selectpicker">
                         <option value="default" selected disabled>-- Выберете город --</option>
@@ -148,23 +149,8 @@
         $('#ads-create').submit(function () {
             var target = $(this);
 
-            if ($('.jFilter input').length > 1) {
-                $('.jFilter input:first').remove();
-            } else {
-                $('.jFilter input:first').prop("disabled", "disabled");
-            }
-            var formData = new FormData(this);
-
-            $.ajax({
-                type: "POST",
-                url: target.attr('action'),
-                data: formData,
-                dataType: 'json',
-                processData: false,
-                contentType: false,
+            target.ajaxSubmit({
                 success: function (data) {
-                    $('.jFilter input:first').removeProp("disabled");
-
                     if (data.success) {
                         window.location.href = data.redirect;
                     } else {
@@ -175,7 +161,7 @@
                             .addClass('has-success');
 
                         $.each(data.formErrors, function (name, value) {
-                            var $elem = $('[name^=' + name + ']');
+                            var $elem = $('[name^="' + name + '"]');
                             var errors = '';
 
                             $.each(value, function (index, value) {
@@ -191,6 +177,9 @@
                             });
                         });
                     }
+                },
+                error: function (XMLHttpRequest) {
+                    alert(XMLHttpRequest.status + ': ' + XMLHttpRequest.responseText);
                 }
             });
 
