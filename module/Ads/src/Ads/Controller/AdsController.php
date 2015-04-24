@@ -3,10 +3,9 @@
 namespace Ads\Controller;
 
 use Application\Entity\AdsValues;
-use Zend\Filter\File\RenameUpload;
-use Zend\InputFilter\FileInput;
 use Zend\Mvc\Controller\AbstractActionController;
 use DoctrineModule\Stdlib\Hydrator\DoctrineObject as DoctrineHydrator;
+use Doctrine\ORM\Query;
 use Zend\View\Model\ViewModel;
 use Zend\View\Model\JsonModel;
 use Application\Entity\Ads;
@@ -14,19 +13,23 @@ use Application\Entity\Ads;
 
 class AdsController extends AbstractActionController
 {
+
     public function showFormAdsAction()
     {
         $cats = $this->em()
-            ->createQuery('Select c.id, c.name from Application\Entity\Categories c WHERE c.id=c.root')
-            ->getResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
+            ->getRepository('Application\Entity\Categories')
+            ->getRootCategories()
+            ->getResult(Query::HYDRATE_ARRAY);
 
         $regions = $this->em()
-            ->createQuery('Select r from Application\Entity\Region r')
-            ->getResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
+            ->getRepository('Application\Entity\Region')
+            ->getAll()
+            ->getResult(Query::HYDRATE_ARRAY);
 
         $currencies = $this->em()
-            ->createQuery('Select c from Application\Entity\Currency c')
-            ->getResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
+            ->getRepository('Application\Entity\Currency')
+            ->getAll()
+            ->getResult(Query::HYDRATE_ARRAY);
 
         return new ViewModel(array(
             'cats' => $cats,
@@ -157,9 +160,9 @@ class AdsController extends AbstractActionController
 
         if ($request->isPost()) {
             $cities = $this->em()
-                ->createQuery('Select c from Application\Entity\City c WHERE c.regionid=:regionid')
-                ->setParameters(array('regionid' => $request->getPost('regionid')))
-                ->getResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
+                ->getRepository('Application\Entity\City')
+                ->getCityByRegionId($request->getPost('regionid'))
+                ->getResult(Query::HYDRATE_ARRAY);
 
             return new JsonModel(array(
                 'cities' => $cities
@@ -200,18 +203,28 @@ class AdsController extends AbstractActionController
     {
         $request = $this->getRequest();
         $page = $request->getQuery('page', 0);
-        $selector = $this->getServiceLocator()->get('Ads\Service\AdsSelector');
+        $limit = 10;
 
-        $ads = $selector->getAdsByCategories($page);
-        $number = $selector->countAdsByCategories();
+        $ads = $this->em()
+            ->getRepository('Application\Entity\Ads')
+            ->getAdsAll($page, $limit)
+            ->getResult(Query::HYDRATE_ARRAY);
+
+        $number = $this->em()
+            ->getRepository('Application\Entity\Ads')
+            ->countAdsAll()
+            ->getSingleScalarResult();
+
         $categories = $this->em()
-            ->createQuery('Select partial c.{name, id} from Application\Entity\Categories c WHERE c.id=c.root')
-            ->getResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
+            ->getRepository('Application\Entity\Categories')
+            ->getRootCategories()
+            ->getResult(Query::HYDRATE_ARRAY);
 
         return new ViewModel(array(
             'ads' => $ads,
             'page' => $page,
             'numberAds' => $number,
+            'limit' => $limit,
             'adsMenu' => array(
                 'type' => 'category',
                 'data' => $categories
@@ -224,13 +237,15 @@ class AdsController extends AbstractActionController
         $request = $this->getRequest();
         $page = $request->getQuery('page', 0);
         $catId = $this->params('catId', 0);
-        $selector = $this->getServiceLocator()->get('Ads\Service\AdsSelector');
+        $limit = 10;
 
         $category = $this->em()
             ->find('Application\Entity\Categories', $catId);
 
         if (!empty($category)) {
             $catsIds = array();
+            $catsIds[] = $category->getId();
+
             $cats = $this->nsm('Application\Entity\Categories')
                 ->wrapNode($category)
                 ->getDescendants();
@@ -239,29 +254,39 @@ class AdsController extends AbstractActionController
                 $catsData = array();
 
                 foreach ($cats as $cat) {
-                    $catsData[]['id'] = $catsIds[] = $cat->getId();
-                    $catsData[]['name'] = $cat->__toString();
+                    $cat = $cat->getNode();
+                    $catsIds[] = $cat->getId();
+                    $catsData[] = array(
+                        'id' => $cat->getId(),
+                        'name' => $cat->getName()
+                    );
                 }
             } else {
-                $catsData[]['id'] = $catsIds[] = $category->getId();
-                $catsData[]['name'] = $category->getName();
+                $catsData[] = array(
+                    'id' => $category->getId(),
+                    'name' => $category->getName()
+                );
 
                 $attributes = $this->em()
-                    ->createQuery("Select a.name, c.value from Application\Entity\AdsValues c
-                                      JOIN c.attrid a
-                                      WHERE a.catid=:category")
-                    ->setParameters(array(
-                        'category' => $category->getId(),
-                    ))
-                    ->getResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
+                    ->getRepository('Application\Entity\AdsValues')
+                    ->getAttrValuesByCategory($category->getId())
+                    ->getResult(Query::HYDRATE_ARRAY);
             }
 
-            $ads = $selector->getAdsByCategories($page, $catsIds);
-            $number = $selector->countAdsByCategories($catsIds);
+            $ads = $this->em()
+                ->getRepository('Application\Entity\Ads')
+                ->getAdsByCategories($page, $catsIds, $limit)
+                ->getResult(Query::HYDRATE_ARRAY);
+
+            $numberAds = $this->em()
+                ->getRepository('Application\Entity\Ads')
+                ->countAdsByCategories($catsIds)
+                ->getSingleScalarResult();
 
             return new ViewModel(array(
                 'ads' => $ads,
-                'numberAds' => $number,
+                'numberAds' => $numberAds,
+                'limit' => $limit,
                 'page' => $page,
                 'adsMenu' => array(
                     'type' => !empty($cats) ? 'category' : 'attribute',
@@ -277,20 +302,25 @@ class AdsController extends AbstractActionController
 
     public function searchByFixedParamsAction()
     {
+        $limit = 10;
         $request = $this->getRequest();
         $page = $request->getQuery('page', 0);
         $data = $request->getPost();
         $search = $this->getServiceLocator()->get('Ads\Service\Search');
-        $selector = $this->getServiceLocator()->get('Ads\Service\AdsSelector');
 
         $ads = $search->setData($data['search'])->search($page);
-        $attrsVals = $selector->getAttrValuesByCategory($data['categoryId']);
         $number = $search->countAds();
+
+        $attrsVals = $this->em()
+            ->getRepository('Application\Entity\AdsValues')
+            ->getAttrValuesByCategory($data['categoryId'])
+            ->getResult(Query::HYDRATE_ARRAY);
 
         return new ViewModel(array(
             'ads' => $ads,
             'numberAds' => $number,
             'page' => $page,
+            'limit' => $limit,
             'adsMenu' => array(
                 'type' => 'attribute',
                 'data' => $attrsVals
