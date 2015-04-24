@@ -10,12 +10,8 @@ class IndexController extends AbstractActionController
 {
     public function indexAction()
     {
-        $view = new ViewModel();
-        $adsView = new ViewModel();
+        $ads = $this->forward()->dispatch('Ads\Controller\Ads', array('action' => 'mainCategories'));
 
-        $adsView->setTemplate('ads/ads/index');
-        $view->addChild($adsView, 'ads');
-
-        return $view;
+        return $ads;
     }
 }

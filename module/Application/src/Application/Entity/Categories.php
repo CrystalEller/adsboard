@@ -9,7 +9,7 @@ use DoctrineExtensions\NestedSet\MultipleRootNode;
  * Categories
  *
  * @ORM\Table(name="categories")
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="Application\EntityRepository\CategoriesRepository")
  */
 class Categories implements MultipleRootNode
 {

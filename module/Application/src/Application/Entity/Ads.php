@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
  * Ads
  *
  * @ORM\Table(name="ads", indexes={@ORM\Index(name="userId", columns={"userId"}), @ORM\Index(name="cityid", columns={"cityid"}), @ORM\Index(name="currencyid", columns={"currencyid"}), @ORM\Index(name="categoryid", columns={"categoryid"})})
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="Application\EntityRepository\AdsRepository")
  * @ORM\HasLifecycleCallbacks
  */
 class Ads
