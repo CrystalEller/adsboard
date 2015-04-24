@@ -11,12 +11,12 @@
     "php": ">=5.3.3",
     "zendframework/zendframework": "2.3.*",
     "doctrine/doctrine-orm-module": "0.8.*",
-    "zendframework/zftool": "dev-master",
     "soflomo/mail": "~0.3",
     "cbsi/doctrine2-nestedset": "dev-master"
   },
   "require-dev": {
     "zendframework/zend-developer-tools": "dev-master",
-    "squizlabs/php_codesniffer": "2.*"
+    "squizlabs/php_codesniffer": "2.*",
+    "zendframework/zftool": "dev-master"
   }
 }
