@@ -1,0 +1,51 @@
+<?php
+$page = ($this->page) ?: 1;
+$startPage = ($page < 5) ? 1 : $page - 4;
+$totalPage = ceil($this->numberAds / $this->limit);
+$endPage = 8 + $startPage;
+$endPage = ($totalPage < $endPage) ? $totalPage : $endPage;
+$diff = $startPage - $endPage + 8;
+$startPage -= ($startPage - $diff > 0) ? $diff : 0;
+
+$serverUrl = $this->serverUrl(true);
+$uri = substr($serverUrl, 0, strpos($serverUrl, '?'));
+?>
+<nav>
+    <ul class="pagination">
+        <li class="<?php if ($page == 1) echo 'disabled'; ?>">
+            <a href="<?= $uri . '?page=' . ($page - 1) ?>" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+            </a>
+        </li>
+
+        <?php if ($startPage > 1): ?>
+            <li>
+                <a href="<?= $uri . '?page=1' ?>">1</a>
+            </li>
+            <li>
+                <span>...<span>
+            </li>
+        <?php endif; ?>
+
+        <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
+            <li class="<?php if ($i == $page) echo 'active'; ?>">
+                <a href="<?= $uri . '?page=' . $i ?>"><?= $i ?></a>
+            </li>
+        <?php endfor; ?>
+
+        <?php if ($endPage < $totalPage): ?>
+            <li>
+                <span>...<span>
+            </li>
+            <li>
+                <a href="<?= $uri . '?page=' . $totalPage ?>"><?= $totalPage ?></a>
+            </li>
+        <?php endif; ?>
+
+        <li class="<?php if ($this->page == $totalPage) echo 'disabled'; ?>">
+            <a href="<?= $uri . '?page=' . ($page + 1) ?>" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+            </a>
+        </li>
+    </ul>
+</nav>

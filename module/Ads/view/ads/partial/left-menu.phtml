@@ -1,0 +1,31 @@
+<?php if ($this->adsMenu['type'] == 'category'): ?>
+    <ul>
+        <?php foreach ($this->adsMenu['data'] as $data): ?>
+            <li>
+                <h4>
+                    <a href="<?php $this->url('adsByCategory', array('catId' => $data['id'])) ?>">
+                        <?= $data['name'] ?>
+                    </a>
+                </h4>
+            </li>
+        <?php endforeach; ?>
+    </ul>
+<?php else: ?>
+    <?php foreach ($this->adsMenu['data'] as $data): ?>
+        <h4><?= $data['name'] ?></h4>
+        <ul>
+            <li>
+                <div class="checkbox">
+                    <label>
+                        <a href="<?= $this->url('searchByFixedParams') ?>">
+                            <input type="checkbox"> asdasd
+                        </a>
+                    </label>
+                </div>
+                <a href="<?php $this->url('adsByCategory', array('catId' => $data['id'])) ?>">
+                    <h4><?= $data['name'] ?></h4>
+                </a>
+            </li>
+        </ul>
+    <?php endforeach; ?>
+<?php endif; ?>
