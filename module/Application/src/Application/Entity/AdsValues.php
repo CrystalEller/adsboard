@@ -7,8 +7,8 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * AdsValues
  *
- * @ORM\Table(name="ads_values", indexes={@ORM\Index(name="attrid", columns={"attrid"}), @ORM\Index(name="adsid", columns={"adsid"})})
- * @ORM\Entity(repositoryClass="Application\EntityRepository\AdsValuesRepository")
+ * @ORM\Table(name="ads_values", indexes={@ORM\Index(name="attrid", columns={"valueid"}), @ORM\Index(name="adsid", columns={"adsid"})})
+ * @ORM\Entity
  */
 class AdsValues
 {
@@ -22,23 +22,6 @@ class AdsValues
     private $id;
 
     /**
-     * @var string
-     *
-     * @ORM\Column(name="value", type="string", length=255, nullable=true)
-     */
-    private $value;
-
-    /**
-     * @var \Application\Entity\CategoryAttributes
-     *
-     * @ORM\ManyToOne(targetEntity="Application\Entity\CategoryAttributes")
-     * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="attrid", referencedColumnName="id")
-     * })
-     */
-    private $attrid;
-
-    /**
      * @var \Application\Entity\Ads
      *
      * @ORM\ManyToOne(targetEntity="Application\Entity\Ads")
@@ -47,6 +30,17 @@ class AdsValues
      * })
      */
     private $adsid;
+
+    /**
+     * @var \Application\Entity\CategoryAttributesValues
+     *
+     * @ORM\ManyToOne(targetEntity="Application\Entity\CategoryAttributesValues")
+     * @ORM\JoinColumns({
+     *   @ORM\JoinColumn(name="valueid", referencedColumnName="id")
+     * })
+     */
+    private $valueid;
+
 
 
     /**
@@ -60,49 +54,15 @@ class AdsValues
     }
 
     /**
-     * Get value
+     * Set adsid
      *
-     * @return string
-     */
-    public function getValue()
-    {
-        return $this->value;
-    }
-
-    /**
-     * Set value
-     *
-     * @param string $value
+     * @param \Application\Entity\Ads $adsid
      *
      * @return AdsValues
      */
-    public function setValue($value)
+    public function setAdsid(\Application\Entity\Ads $adsid = null)
     {
-        $this->value = $value;
-
-        return $this;
-    }
-
-    /**
-     * Get attrid
-     *
-     * @return \Application\Entity\CategoryAttributes
-     */
-    public function getAttrid()
-    {
-        return $this->attrid;
-    }
-
-    /**
-     * Set attrid
-     *
-     * @param \Application\Entity\CategoryAttributes $attrid
-     *
-     * @return AdsValues
-     */
-    public function setAttrid(\Application\Entity\CategoryAttributes $attrid = null)
-    {
-        $this->attrid = $attrid;
+        $this->adsid = $adsid;
 
         return $this;
     }
@@ -118,16 +78,26 @@ class AdsValues
     }
 
     /**
-     * Set adsid
+     * Set valueid
      *
-     * @param \Application\Entity\Ads $adsid
+     * @param \Application\Entity\CategoryAttributesValues $valueid
      *
      * @return AdsValues
      */
-    public function setAdsid(\Application\Entity\Ads $adsid = null)
+    public function setValueid(\Application\Entity\CategoryAttributesValues $valueid = null)
     {
-        $this->adsid = $adsid;
+        $this->valueid = $valueid;
 
         return $this;
+    }
+
+    /**
+     * Get valueid
+     *
+     * @return \Application\Entity\CategoryAttributesValues
+     */
+    public function getValueid()
+    {
+        return $this->valueid;
     }
 }

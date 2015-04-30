@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
  * CategoryAttributes
  *
  * @ORM\Table(name="category_attributes", indexes={@ORM\Index(name="catid", columns={"catid"})})
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="Application\EntityRepository\CategoryAttributesRepository")
  */
 class CategoryAttributes
 {
@@ -31,7 +31,7 @@ class CategoryAttributes
     /**
      * @var string
      *
-     * @ORM\Column(name="values", type="text", length=65535, nullable=true)
+     * @ORM\Column(name="values", type="array", length=65535, nullable=true)
      */
     private $values;
 
