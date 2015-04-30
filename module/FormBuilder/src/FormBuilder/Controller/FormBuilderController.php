@@ -3,44 +3,50 @@
 namespace FormBuilder\Controller;
 
 
+use Doctrine\ORM\Query;
 use Zend\Mvc\Controller\AbstractActionController;
+use \Doctrine\DBAL\Connection;
+use Zend\View\Model\JsonModel;
 
 class FormBuilderController extends AbstractActionController
 {
 
-    protected $em;
-
     public function getFormAction()
     {
         $response = $this->getResponse();
-        $em = $this->getEntityManager();
-        $values = array();
-        $attrs = $em->getRepository('\Application\Entity\CategoryAttributes')
-            ->findBy(array('catid' => $this->params()->fromRoute('catid')));
+        $data = array();
+        $categoryId = $this->params()->fromRoute('catid');
+        $attributes = $this->em()
+            ->getRepository('Application\Entity\CategoryAttributes')
+            ->getAttrsByCategoryId($categoryId)
+            ->getResult(Query::HYDRATE_ARRAY);
 
-        foreach ($attrs as $attr) {
-            $unVal = unserialize($attr->getValues());
-            $unVal['id'] = $attr->getId();
-            $values[] = $unVal;
+        if (!empty($attributes)) {
+            foreach ($attributes as $attribute) {
+                $values = $this->em()
+                    ->getRepository('Application\Entity\CategoryAttributesValues')
+                    ->getValuesByAttrId($attribute['id'])
+                    ->getResult(Query::HYDRATE_ARRAY);
+                if (!empty($values)) {
+                    $attribute['values']['values'] = $values;
+                    $attribute['values']['id'] = $attribute['id'];
+                    $data[] = $attribute['values'];
+                } else {
+                    $attribute['values']['id'] = $attribute['id'];
+                    $data[] = $attribute['values'];
+                }
+            }
         }
 
-        $response->setContent(\Zend\Json\Json::encode(['fields' => $values]));
-        return $response;
-    }
-
-    public function getEntityManager()
-    {
-        if (null === $this->em) {
-            $this->em = $this->getServiceLocator()->get('doctrine.entitymanager.orm_default');
-        }
-        return $this->em;
+        return new JsonModel(array(
+            'fields' => $data
+        ));
     }
 
     public function changeFormAction()
     {
         $request = $this->getRequest();
-        $response = $this->getResponse();
-        $conn = $this->getEntityManager()->getConnection();
+        $conn = $this->em()->getConnection();
 
         if ($request->isPost()) {
 
@@ -50,44 +56,97 @@ class FormBuilderController extends AbstractActionController
                 foreach ($request->getPost('fieldsActions') as $action => $data) {
                     switch ($action) {
                         case 'insertFields':
-                            foreach ($data as $field) {
-                                $conn->insert('category_attributes',
-                                    array(
-                                        'name' => $field['name'],
-                                        'catid' => $this->params()->fromRoute('catid'),
-                                        '`values`' => serialize($field)
-                                    )
-                                );
-                            }
+                            $this->insertFields($conn, $data);
                             break;
                         case 'updateFields':
-                            foreach ($data as $field) {
-                                $conn->update('category_attributes',
-                                    array(
-                                        '`values`' => serialize($field),
-                                        'name' => $field['name']
-                                    ),
-                                    array('id' => $field['id'])
-                                );
-                            }
+                            $this->updateFields($conn, $data);
                             break;
                         case 'deleteFields':
-                            foreach ($data as $field) {
-                                $conn->delete('category_attributes',
-                                    array('id' => $field['id'])
-                                );
-                            }
+                            $this->deleteFields($conn, $data);
                             break;
                     }
                 }
                 $conn->commit();
             } catch (\Exception $e) {
                 $conn->rollback();
-                $response->setContent(\Zend\Json\Json::encode(0));
-                return $response;
+                return new JsonModel(array(0));
             }
-            $response->setContent(\Zend\Json\Json::encode(1));
-            return $response;
+            return new JsonModel(array(1));
+        }
+    }
+
+    private function insertFields(Connection $conn, array $data)
+    {
+        foreach ($data as $field) {
+            $values = array_diff_key($field, array('name' => 0, 'values' => 0));
+
+            $conn->insert('category_attributes',
+                array(
+                    'name' => $field['name'],
+                    'catid' => $this->params()->fromRoute('catid'),
+                    '`values`' => serialize($values)
+                )
+            );
+            $lastId = $conn->lastInsertId();
+
+            if (!empty($field['values'])) {
+                foreach ($field['values'] as $value) {
+                    $conn->insert('category_attributes_values',
+                        array(
+                            'attrid' => $lastId,
+                            '`value`' => $value['value']
+                        )
+                    );
+                }
+            }
+        }
+    }
+
+    private function updateFields(Connection $conn, array $data)
+    {
+        foreach ($data as $field) {
+            $values = array_diff_key($field, array('name' => 0, 'values' => 0));
+
+            $conn->update('category_attributes',
+                array(
+                    '`values`' => serialize($values),
+                    'name' => $field['name']
+                ),
+                array('id' => $field['id'])
+            );
+
+            if (!empty($field['values'])) {
+                foreach ($field['values'] as $value) {
+                    if ($value['status'] === 0) {
+                        $conn->insert('category_attributes_values',
+                            array(
+                                'attrid' => $field['id'],
+                                '`value`' => $value['value']
+                            )
+                        );
+                    } elseif ($value['status'] === 1) {
+                        $conn->update('category_attributes_values',
+                            array(
+                                '`value`' => $value['value']
+                            ),
+                            array('id' => $value['id'])
+                        );
+                    } else {
+                        $conn->delete('category_attributes_values',
+                            array('id' => $value['id'])
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    private function deleteFields(Connection $conn, array $data)
+    {
+        foreach ($data as $field) {
+            $conn->delete('category_attributes',
+                array('id' => $field['id'])
+            );
         }
     }
 }
