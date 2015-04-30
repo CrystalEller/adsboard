@@ -7,8 +7,8 @@ FieldEditForm.prototype = {
         var that = this;
         var form = $('<form/>').addClass('edit-field');
         $.each(this.formField.getData(), function (key, value) {
-            if (key in that.generators) {
-                form.append(that.generators[key](value, that.formField));
+            if (key in that.patterns) {
+                form.append(that.patterns[key](value, that.formField));
             }
         });
         form.append(
@@ -31,35 +31,42 @@ FieldEditForm.prototype = {
     },
     addEventListeners: function () {
         var that = this;
-        $('#form-elements').one('click',
+
+        $('.element-row').unbind('click').on('click',
             '#' + that.formField.data.id + ' .popover button',
             function (e) {
                 var target = $(this);
+                if (target.hasClass('delete-value')) {
+                    var input = target.closest('div.input-group').find('input'),
+                        nameParts = input.attr('name').split('_');
+
+                    if (nameParts[2] == 0) {
+                        input.parent().remove();
+                    } else {
+                        nameParts[2] = -1;
+                        input.attr('name', nameParts.join('_'));
+                        input.hide();
+                    }
+                }
+                if (target.hasClass('add-value')) {
+                    target.before(that.patterns['value']());
+                }
                 if (target.hasClass('cancel')) {
                     that.formField.fieldDiv.popover('destroy');
                 }
                 if (target.hasClass('save')) {
-                    var formData = $('#' + that.formField.data.id + ' form.edit-field').serializeObject();
-                    if (formData.values) {
-                        formData.values = formData.values.split('\n')
-                            .filter(function (elem) {
-                                return elem.trim().length > 0
-                            });
-                    }
+                    var formData = $('#' + that.formField.data.id + ' form.edit-field').serializeArray();
 
                     that.formField.fieldDiv.popover('destroy');
-
-                    that.formField.setData($.extend({}, that.formField.data, formData));
-
+                    that.formField.updateData(formData);
                     that.formField.fieldDiv.replaceWith(that.formField.generateField());
-
                 }
             }
         );
     }
 };
 
-FieldEditForm.prototype.generators = {
+FieldEditForm.prototype.patterns = {
     name: function (value, formField) {
         var formFieldData = formField.getData();
 
@@ -162,17 +169,44 @@ FieldEditForm.prototype.generators = {
         );
     },
     values: function (data) {
+        var that = this;
         var label = $('<label/>').text('Options');
-        var textarea = $('<textarea/>').addClass('form-control').attr({
-            name: 'values',
-            rows: 6,
-            cols: 6
-        });
+        var buttonAdd = $('<button>')
+            .addClass('btn btn-default btn-sm add-value')
+            .attr('type', 'button')
+            .text('Add');
+        var row = $('<div/>').addClass('row');
+
+        row.append(label);
 
         $.each(data, function (index, value) {
-            textarea.val(textarea.val() + value + '\n');
+            row.append(that.value(value));
         });
 
-        return $('<div/>').addClass('row').append(label, textarea);
+        row.append(buttonAdd);
+
+        return row
+    },
+    value: function (data) {
+        data = $.extend({}, {
+            'id': 0,
+            'value': ' ',
+            'status': 0
+        }, data);
+
+        var input = $('<input>').addClass('form-control').attr({
+                'name': data.id + '_' + data.value + '_' + data.status
+            }).val(data.value),
+            inputGroup = $('<div>').addClass('input-group'),
+            inputGroupBtn = $('<div>').addClass('input-group-btn'),
+            button = $('<button>')
+                .addClass('btn btn-default delete-value')
+                .attr('type', 'button')
+                .text('Delete');
+
+        inputGroupBtn.append(button);
+        inputGroup.append(input, inputGroupBtn);
+
+        return inputGroup;
     }
 };

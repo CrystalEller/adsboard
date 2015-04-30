@@ -21,6 +21,9 @@ FormField.prototype = {
     getData: function () {
         return this.data;
     },
+    updateData: function (data) {
+        this.update[this.type](this, data);
+    },
     generateField: function (wrapper) {
         var data = $.extend({}, this.defaultData[this.type], this.data);
 
@@ -43,13 +46,53 @@ FormField.prototype = {
     }
 };
 
+FormField.prototype.update = {
+    "SingleLineText": function (formField, data) {
+        $.each(data, function (key, val) {
+            if (formField.data.hasOwnProperty(val.name)) {
+                formField.data[val.name] = val.value;
+            } else {
+                var match = /^length\[(max|min)\]$/.exec(val.name);
+
+                formField.data.length[match[1]] = val.value;
+            }
+        });
+    },
+    "ParagraphText": function (formField, data) {
+        this.SingleLineText(formField, data);
+    },
+    "MultipleChoices": function (formField, data) {
+        formField.data.values = [];
+
+        $.each(data, function (key, val) {
+            if (formField.data.hasOwnProperty(val.name)) {
+                formField.data[val.name] = val.value;
+            } else {
+                var valueParts = val.name.split("_");
+
+                formField.data.values.push({
+                    'id': valueParts[0],
+                    'value': val.value.trim(),
+                    'status': valueParts[2]
+                });
+
+            }
+        });
+    },
+    "Checkboxes": function (formField, data) {
+        this.MultipleChoices(formField, data);
+    },
+    "DropDown": function (formField, data) {
+        this.MultipleChoices(formField, data);
+    }
+};
+
 FormField.prototype.generators = {
     "SingleLineText": function (wrapper, label, data) {
         var input = $('<input/>').addClass('form-control');
         input.attr({
             'type': 'text',
             'id': 'prop[' + data.id + ']',
-            'name': 'prop[' + data.id + ']',
             'placeholder': data.placeholder
         }).prop("required", data.required);
 
@@ -60,7 +103,6 @@ FormField.prototype.generators = {
         var input = $('<textarea/>').addClass('form-control');
         input.attr({
             'id': 'prop[' + data.id + ']',
-            'name': 'prop[' + data.id + ']',
             'placeholder': data.placeholder
         }).prop("required", data.required);
 
@@ -71,12 +113,16 @@ FormField.prototype.generators = {
         label.addClass('radio control-label');
 
         $.each(data.values, function (index, value) {
-            var label = $('<label/>').text(value);
+            var label = $('<label/>').text(value.value);
             var radio = $('<input/>').attr({
                 'type': 'radio',
-                'name': 'prop[' + data.id + ']',
-                'value': value
+                'value': value.value
             });
+
+            if (value.id != 0) {
+                value.status = 1;
+            }
+
             label.prepend(radio);
             var div = $('<div/>').addClass('radio').append(label);
             wrapper.append(div);
@@ -88,12 +134,16 @@ FormField.prototype.generators = {
         label.addClass('checkbox control-label');
 
         $.each(data.values, function (index, value) {
-            var label = $('<label/>').text(value);
+            var label = $('<label/>').text(value.value);
             var radio = $('<input/>').attr({
                 'type': 'checkbox',
-                'name': 'prop[' + data.id + '][]',
-                'value': value
+                'value': value.value
             });
+
+            if (value.id != 0) {
+                value.status = 1;
+            }
+
             label.prepend(radio);
             var div = $('<div/>').addClass('checkbox').append(label);
             wrapper.append(div);
@@ -111,9 +161,13 @@ FormField.prototype.generators = {
         $.each(data.values, function (index, value) {
             select.append(
                 $('<option/>')
-                    .attr('value', value)
-                    .text(value)
+                    .attr('value', value.value)
+                    .text(value.value)
             );
+
+            if (value.id != 0) {
+                value.status = 1;
+            }
         });
         return wrapper.append(select);
     }
@@ -147,24 +201,32 @@ FormField.prototype.defaultData = {
         "name": "Label",
         "label": "Label",
         "values": [
-            "Value1",
-            "Value2"
+            {
+                'id': 0,
+                'value': "Value1",
+                'status': 0
+            },
+            {
+                'id': 0,
+                'value': "Value2",
+                'status': 0
+            }
         ]
     },
     "Checkboxes": {
         "name": "Label",
         "label": "Label",
         "values": [
-            "Checkbox1",
-            "Checkbox2"
+            {'id': 0, 'value': "Checkbox1"},
+            {'id': 0, 'value': "Checkbox2"}
         ]
     },
     "DropDown": {
         "name": "Label",
         "label": "Label",
         "values": [
-            "DropDown1",
-            "DropDown2"
+            {'id': 0, 'value': "DropDown1"},
+            {'id': 0, 'value': "DropDown2"}
         ]
     }
 };

@@ -105,14 +105,19 @@ FormBuilder.prototype = {
             that.$elem.append(that.wrap(formField));
             that.fields[formField.data.id] = formField;
         });
-        $('#form-elements').unbind('click').on('click', '.element-row>.element-buttons>button', function () {
+        $('#form-elements').unbind('click').on('click',
+            '.element-row>.element-buttons>button',
+            function () {
             var target = $(this);
-            if (target.data('action') == 'remove') {
+
+                if (target.data('action') == 'remove') {
                 target.parents('div.row.element-row').remove();
             }
-            if (target.data('action') == 'edit') {
+
+                if (target.data('action') == 'edit') {
                 var form = new FieldEditForm(that.fields[target.data('id')]);
-                $('#' + target.data('id')).popover('destroy').popover({
+
+                    $('#' + target.data('id')).popover('destroy').popover({
                     content: form.generateForm(),
                     container: '#' + target.data('id'),
                     html: true,
