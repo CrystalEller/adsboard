@@ -3,35 +3,43 @@
         <h3 class="panel-title">Объявления</h3>
     </div>
     <ul class="list-group">
-        <?php foreach ($this->ads as $ad): ?>
-            <li class="list-group-item">
-                <div class="row same-columns">
-                    <div class="col-lg-3 ads-preview-border-right">
-                        <img src=""
-                             alt="..." width="150px" height="90px">
+        <?php if (!empty($this->ads)): ?>
+            <?php foreach ($this->ads as $ad): ?>
+                <li class="list-group-item">
+                    <div class="row same-columns">
+                        <div class="col-lg-3 ads-preview-border-right">
+                            <img src=""
+                                 alt="..." width="150px" height="90px">
+                        </div>
+                        <div class="col-lg-6 ads-preview-border-right">
+                            <h4>
+                                <a href="<?= $this->url('showAds', array('adsId' => $ad['id'])) ?>">
+                                    <?= $this->escapeHtml($ad['title']) ?>
+                                </a>
+                            </h4>
+                        </div>
+                        <div class="col-lg-3">
+                            <h4>
+                                <?php if (!empty($ad['price'])): ?>
+                                    <?= $this->escapeHtml($ad['price']) ?>
+                                    <?= $ad['currencyid']['name'] ?>
+                                <?php else: ?>
+                                    Договорная
+                                <?php endif; ?>
+                            </h4>
+                            <h5>
+                                <?php if (!empty($ad['cityid'])): ?>
+                                    <?= $this->escapeHtml($ad['cityid']['name']) ?>
+                                <?php else: ?>
+                                    Вся Украина
+                                <?php endif; ?>
+                            </h5>
+                        </div>
                     </div>
-                    <div class="col-lg-6 ads-preview-border-right">
-                        <h4><?= $this->escapeHtml($ad['title']) ?></h4>
-                    </div>
-                    <div class="col-lg-3">
-                        <h4>
-                            <?php if (!empty($ad['price'])): ?>
-                                <?= $this->escapeHtml($ad['price']) ?>
-                                <?= $ad['currencyid']['name'] ?>
-                            <?php else: ?>
-                                Договорная
-                            <?php endif; ?>
-                        </h4>
-                        <h5>
-                            <?php if (!empty($ad['cityid'])): ?>
-                                <?= $this->escapeHtml($ad['cityid']['name']) ?>
-                            <?php else: ?>
-                                Вся Украина
-                            <?php endif; ?>
-                        </h5>
-                    </div>
-                </div>
-            </li>
-        <?php endforeach; ?>
+                </li>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <?= $this->partial('ads/partial/ads-no-found') ?>
+        <?php endif; ?>
     </ul>
 </div>

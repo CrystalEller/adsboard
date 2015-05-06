@@ -1,0 +1,116 @@
+<?php $this->headScript()
+    ->appendFile($this->basePath() . '/js/image-gallery/jquery.blueimp-gallery.min.js')
+    ->appendFile($this->basePath() . '/js/image-gallery/bootstrap-image-gallery.js')
+?>
+<?php $this->headLink()
+    ->appendStylesheet($this->basePath() . '/css/image-gallery/bootstrap-image-gallery.min.css')
+    ->appendStylesheet($this->basePath() . '/css/image-gallery/blueimp-gallery.min.css')
+
+?>
+
+<?php $ads = $this->ads; ?>
+
+<div class="row">
+    <div class="col-lg-12 ">
+        <h3><?= $ads->getTitle() ?></h3>
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-4">
+        <div>
+            <h2>
+                <?= $ads->getPrice() ?>
+                <?= $ads->getCurrencyid()->getName() ?>
+            </h2>
+        </div>
+        <div class="margin-bottom40">
+            <div class="margin-bottom40">
+                <h5>
+                    <?= $ads->getCategoryid()->getName() ?>
+                </h5>
+                <h5>
+                    Город: <?= $ads->getCityid()->getName() ?>
+                </h5>
+            </div>
+            <h3 class="border-bottom">
+                <?= $ads->getUserName() ?>
+            </h3>
+            <h4>
+                Телефон: +38<?= $ads->getTelephone() ?>
+            </h4>
+        </div>
+        <div>
+            <h4>
+                Опубликовано: <?= $ads->getCreated()->format('Y-m-d') ?>
+            </h4>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div id="links">
+            <?php foreach (glob("./public/img/ads_imgs/{$ads->getId()}_*") as $filename): ?>
+                <a href="/img/ads_imgs/<?= basename($filename) ?>" data-gallery>
+                    <img src="<?php echo $this->thumbHelper(basename($filename)); ?>">
+                </a>
+            <?php endforeach; ?>
+        </div>
+        <div id="props" class="row">
+            <ul class="unstyled">
+                <?php foreach ($this->props as $key => $vals): ?>
+                    <li>
+                        <?= $key ?>:
+                        <?= implode(', ', $vals) ?>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+        <div class="ads-description">
+            <?= $ads->getDescription() ?>
+        </div>
+    </div>
+</div>
+
+<!-- The Bootstrap Image Gallery lightbox, should be a child element of the document body -->
+<div id="blueimp-gallery" class="blueimp-gallery">
+    <!-- The container for the modal slides -->
+    <div class="slides"></div>
+    <!-- Controls for the borderless lightbox -->
+    <h3 class="title"></h3>
+    <a class="prev">‹</a>
+    <a class="next">›</a>
+    <a class="close">×</a>
+    <a class="play-pause"></a>
+    <ol class="indicator"></ol>
+    <!-- The modal dialog, which will be used to wrap the lightbox content -->
+    <div class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title"></h4>
+                </div>
+                <div class="modal-body next"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left prev">
+                        <i class="glyphicon glyphicon-chevron-left"></i>
+                        Previous
+                    </button>
+                    <button type="button" class="btn btn-primary next">
+                        Next
+                        <i class="glyphicon glyphicon-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        if ($('#links>a').length > 0) {
+            $('#links').addClass('border-bottom');
+        }
+        if ($('#props>ul>li').length > 0) {
+            $('#props').addClass('border-bottom');
+        }
+    });
+</script>

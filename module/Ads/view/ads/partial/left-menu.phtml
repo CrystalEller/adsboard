@@ -1,30 +1,68 @@
+<?php echo $this->headScript()
+    ->prependFile($this->basePath() . '/js/checkbox-x.min.js') ?>
+<?php echo $this->headLink()
+    ->prependStylesheet($this->basePath() . '/css/checkbox-x.min.css') ?>
+
 <?php if ($this->adsMenu['type'] == 'category'): ?>
     <ul>
         <?php foreach ($this->adsMenu['data'] as $data): ?>
             <li>
                 <h4>
-                    <a href="<?php $this->url('adsByCategory', array('catId' => $data['id'])) ?>">
+                    <a href="<?= $this->url('adsByCategory', array('catId' => $data['id'])) ?>">
                         <?= $data['name'] ?>
                     </a>
                 </h4>
             </li>
         <?php endforeach; ?>
     </ul>
+
 <?php else: ?>
+    <?php
+    $names = array();
+
+    if (!empty($this->search)) {
+        $url = $this->url(
+            'search',
+            array(),
+            array(
+                'query' => $this->search
+            )
+        );
+    } else {
+        $url = $this->url(
+            'search',
+            array(),
+            array(
+                'query' => array(
+                    'categoryid' => $this->category
+                )
+            )
+        );
+    }
+    ?>
+    <h4>Опции</h4>
     <?php foreach ($this->adsMenu['data'] as $data): ?>
-        <h4><?= $data['name'] ?></h4>
-        <ul>
+        <?php if (!in_array($data['name'], $names)): ?>
+            <h4><?= $data['name'] ?>:</h4>
+            <?php $names[] = $data['name']; ?>
+        <?php endif; ?>
+        <ul class="list-unstyled">
             <li>
-                <div class="checkbox">
-                    <label>
-                        <a href="<?= $this->url('searchByFixedParams') ?>">
-                            <input type="checkbox"> asdasd
+                <div class="cbx-container">
+                    <label class="cbx-label" style="font-size: large">
+                        <?php if (!empty($this->search['propId']) && (in_array($data['id'], $this->search['propId']))): ?>
+                            <?php $hUrl = preg_replace("/&propId[^&]+={$data['id']}/", '', $url, 1); ?>
+                            <?php $isSelected = true; ?>
+                        <?php else: ?>
+                            <?php $hUrl = $url . '&propId[]=' . $data['id']; ?>
+                            <?php $isSelected = false; ?>
+                        <?php endif; ?>
+                        <a href="<?= $hUrl ?>">
+                            <input data-toggle="checkbox-x" value="<?= $isSelected ?>"
+                                   data-three-state="false"><?= $data['value'] ?>
                         </a>
                     </label>
                 </div>
-                <a href="<?php $this->url('adsByCategory', array('catId' => $data['id'])) ?>">
-                    <h4><?= $data['name'] ?></h4>
-                </a>
             </li>
         </ul>
     <?php endforeach; ?>
