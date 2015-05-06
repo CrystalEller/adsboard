@@ -11,6 +11,43 @@ class AdsFilter extends InputFilter implements InputFilterInterface
 
     public function __construct(\Doctrine\ORM\EntityManager $em, \DoctrineExtensions\NestedSet\Manager $nsm)
     {
+        $this->add(array(
+            'name' => 'userName',
+            'required' => true,
+            'filters' => array(
+                array(
+                    'name' => 'StringTrim',
+                )
+            ),
+            'validators' => array(
+                array(
+                    'name' => 'StringLength',
+                    'options' => array(
+                        'encoding' => 'UTF-8',
+                        'min' => 3,
+                        'max' => 15,
+                    ),
+                )
+            )
+        ));
+
+        $this->add(array(
+            'name' => 'telephone',
+            'required' => true,
+            'filters' => array(
+                array(
+                    'name' => 'StringTrim',
+                )
+            ),
+            'validators' => array(
+                array(
+                    'name' => 'Regex',
+                    'options' => array(
+                        'pattern' => '/^\d{10}$/'
+                    ),
+                )
+            )
+        ));
 
         $this->add(array(
             'name' => 'region',
