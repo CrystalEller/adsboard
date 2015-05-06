@@ -50,13 +50,17 @@ class AdsController extends AbstractActionController
             $validator = $this->getServiceLocator()
                 ->get('ValidatorManager')
                 ->get('FormBuilder');
-            $files = $request->getFiles();
             $props = $request->getPost('prop');
+            $values = $request->getPost()->toArray();
+            $files = $request->getFiles()->toArray();
 
-            $data = array_merge(
-                $request->getPost()->toArray(),
-                $files->toArray()
-            );
+
+            if (empty($files['files'][0])) {
+                unset($values['files']);
+                $files = array();
+            }
+
+            $data = array_merge($values, $files);
 
             $filter->setData($data);
             $filterPrice->setData($data);
@@ -93,7 +97,9 @@ class AdsController extends AbstractActionController
                     'userid' => $this->identity()->getId(),
                     'categoryid' => end(array_values($request->getPost('category'))),
                     'cityid' => $request->getPost('city'),
-                    'regionid' => $request->getPost('region')
+                    'regionid' => $request->getPost('region'),
+                    'userName' => $request->getPost('userName'),
+                    'telephone' => $request->getPost('telephone')
                 );
 
                 if ($request->getPost('no-price') !== 'no-price') {
@@ -106,31 +112,9 @@ class AdsController extends AbstractActionController
                 $this->em()->persist($ads);
                 $this->em()->flush();
 
-                if (!empty($props)) {
-                    foreach ($props as $id => $values) {
-                        if (!is_array($values)) {
-                            $adsValue = new AdsValues();
-                            $hydrator->hydrate(array(
-                                'attrid' => $id,
-                                'adsid' => $ads->getId(),
-                                'value' => $values
-                            ), $adsValue);
-                            $this->em()->persist($adsValue);
-                        } else {
-                            foreach ($values as $value) {
-                                $adsValue = new AdsValues();
-                                $hydrator->hydrate(array(
-                                    'attrid' => $id,
-                                    'adsid' => $ads->getId(),
-                                    'value' => $value
-                                ), $adsValue);
-                                $this->em()->persist($adsValue);
-                            }
-                        }
-                    }
-                }
-
-                $this->em()->flush();
+                $this->em()
+                    ->getRepository('Application\Entity\AdsValues')
+                    ->saveValues($props, $ads);
 
                 $this->move_uploaded_imgs($files, $ads->getId());
 
@@ -143,15 +127,28 @@ class AdsController extends AbstractActionController
         }
     }
 
-    private function move_uploaded_imgs($files, $adsId)
+    public function showAdsAction()
     {
-        if (!empty($files['files'])) {
-            $uploadDir = './public/img/ads/';
-            foreach ($files['files'] as $file) {
-                $newFileName = $uploadDir . $adsId . '_' . $file['name'];
-                move_uploaded_file($file['tmp_name'], $newFileName);
-            }
+        $adsId = $this->params('adsId', 0);
+
+        $ads = $this->em()
+            ->find('Application\Entity\Ads', $adsId);
+
+        $props = $this->em()
+            ->getRepository('Application\Entity\AdsValues')
+            ->findBy(array('adsid' => $adsId));
+
+        $propsGroups = array();
+
+        foreach ($props as $prop) {
+            $attrName = $prop->getValueid()->getAttrid()->getName();
+            $propsGroups[$attrName][] = $prop->getValueid()->getValue();
         }
+
+        return new ViewModel(array(
+            'ads' => $ads,
+            'props' => $propsGroups
+        ));
     }
 
     public function getCitiesAction()
@@ -268,8 +265,8 @@ class AdsController extends AbstractActionController
                 );
 
                 $attributes = $this->em()
-                    ->getRepository('Application\Entity\AdsValues')
-                    ->getAttrValuesByCategory($category->getId())
+                    ->getRepository('Application\Entity\CategoryAttributesValues')
+                    ->getValuesByCategoryId($category->getId(), 'user')
                     ->getResult(Query::HYDRATE_ARRAY);
             }
 
@@ -287,6 +284,7 @@ class AdsController extends AbstractActionController
                 'ads' => $ads,
                 'numberAds' => $numberAds,
                 'limit' => $limit,
+                'category' => end($catsIds),
                 'page' => $page,
                 'adsMenu' => array(
                     'type' => !empty($cats) ? 'category' : 'attribute',
@@ -300,34 +298,49 @@ class AdsController extends AbstractActionController
         }
     }
 
-    public function searchByFixedParamsAction()
+    public function searchAction()
     {
         $limit = 10;
         $request = $this->getRequest();
         $page = $request->getQuery('page', 0);
-        $data = $request->getPost();
+        $data = $request->getQuery()->toArray();
+        $view = new ViewModel();
         $search = $this->getServiceLocator()->get('Ads\Service\Search');
 
-        $ads = $search->setData($data['search'])->search($page);
+        $ads = $search->setData($data)->search($page, $limit);
         $number = $search->countAds();
 
         $attrsVals = $this->em()
-            ->getRepository('Application\Entity\AdsValues')
-            ->getAttrValuesByCategory($data['categoryId'])
+            ->getRepository('Application\Entity\CategoryAttributesValues')
+            ->getValuesByCategoryId($data['categoryid'], 'user')
             ->getResult(Query::HYDRATE_ARRAY);
 
-        return new ViewModel(array(
-            'ads' => $ads,
-            'numberAds' => $number,
-            'page' => $page,
-            'limit' => $limit,
-            'adsMenu' => array(
-                'type' => 'attribute',
-                'data' => $attrsVals
-            ),
-            'search' => $data['search']
-        ));
+        $view->setTemplate('ads/ads/ads-by-category')
+            ->setVariables(array(
+                'ads' => $ads,
+                'numberAds' => $number,
+                'page' => $page,
+                'limit' => $limit,
+                'search' => $data,
+                'adsMenu' => array(
+                    'type' => 'attribute',
+                    'data' => $attrsVals
+                ),
+            ));
 
+        return $view;
+    }
+
+
+    private function move_uploaded_imgs($files, $adsId)
+    {
+        if (!empty($files['files'])) {
+            $uploadDir = './public/img/ads_imgs/';
+            foreach ($files['files'] as $file) {
+                $newFileName = $uploadDir . $adsId . '_' . $file['name'];
+                move_uploaded_file($file['tmp_name'], $newFileName);
+            }
+        }
     }
 }
 

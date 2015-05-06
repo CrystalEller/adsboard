@@ -16,6 +16,8 @@ class SearchService
     public function __construct(EntityManager $em)
     {
         $this->qb = $em->createQueryBuilder();
+        $this->qb->select('ads, adsCur')
+            ->from('Application\Entity\Ads', 'ads');
     }
 
     public function search($page, $limit = 10)
@@ -24,22 +26,23 @@ class SearchService
 
         $args = $this->getArgs();
 
-        $query = $this->qb->select('ads')
-            ->from('Application\Entity\Ads', 'ads')
+        $query = $this->qb
+            ->leftJoin('ads.currencyid', 'adsCur')
             ->add('where', new Expr\Andx($args))
             ->setMaxResults($limit)
             ->setFirstResult($offset)
             ->getQuery();
 
         return $query->getArrayResult();
-
     }
 
     public function countAds()
     {
         $args = $this->getArgs();
 
-        $query = $this->qb->select('count(ads.id)')
+        $query = $this->qb
+            ->resetDQLParts(array('select', 'from'))
+            ->select('count(ads.id)')
             ->from('Application\Entity\Ads', 'ads')
             ->add('where', new Expr\Andx($args))
             ->getQuery();
@@ -53,11 +56,15 @@ class SearchService
             throw new \Exception('Variable $data must be an array');
         } else {
             foreach ($data as $key => $val) {
-                $method = 'set' . $key;
+                $method = 'set' . ucfirst($key);
                 if (method_exists($this, $method)) {
-                    $val = array_map(function ($value) {
-                        return is_numeric($value) ? intval($value) : 0;
-                    }, $val);
+                    if (is_array($val)) {
+                        $val = array_map(function ($value) {
+                            return is_numeric($value) ? intval($value) : 0;
+                        }, $val);
+                    } else {
+                        $val = is_numeric($val) ? intval($val) : 0;
+                    }
                     $this->$method($val);
                 }
             }
@@ -66,20 +73,27 @@ class SearchService
         return $this;
     }
 
-    public function setAttrValuesIds($attrValuesIds)
+    public function setPropId($attrValuesIds)
     {
-        $this->ids['AttrValuesIds'] = $attrValuesIds;
-        $this->qb->innerJoin('Application\Entity\AdsValues', 'adsVal', 'WITH', 'adsVal.adsid=ads.id');
+        $this->ids['propId'] = $attrValuesIds;
+        $this->qb
+            ->innerJoin('Application\Entity\AdsValues', 'adsVal', 'WITH', 'adsVal.adsid=ads.id')
+            ->innerJoin('Application\Entity\CategoryAttributesValues', 'attrVal', 'WITH', 'adsVal.valueid=attrVal.id');
     }
 
-    public function setRegionsIds($regionIds)
+    public function setRegionId($regionIds)
     {
-        $this->ids['RegionsIds'] = $regionIds;
+        $this->ids['regionId'] = $regionIds;
     }
 
-    public function setCitiesIds($citiesIds)
+    public function setCityId($citiesIds)
     {
-        $this->ids['CitiesIds'] = $citiesIds;
+        $this->ids['cityId'] = $citiesIds;
+    }
+
+    public function setCategoryId($categoryIds)
+    {
+        $this->ids['categoryId'] = $categoryIds;
     }
 
     private function getArgs()
@@ -87,14 +101,17 @@ class SearchService
         foreach ($this->ids as $key => $val) {
             if (!empty($val)) {
                 switch ($key) {
-                    case 'AttrValuesIds':
-                        $this->args[] = $this->qb->expr()->in('adsVal.adsid', $val);
+                    case 'propId':
+                        $this->args[] = $this->qb->expr()->in('attrVal.id', $val);
                         break;
-                    case 'RegionsIds':
+                    case 'regionId':
                         $this->args[] = $this->qb->expr()->in('ads.regionid', $val);
                         break;
-                    case 'CitiesIds':
+                    case 'cityId':
                         $this->args[] = $this->qb->expr()->in('ads.cityid', $val);
+                        break;
+                    case 'categoryId':
+                        $this->args[] = $this->qb->expr()->in('ads.categoryid', $val);
                         break;
                 }
             }
