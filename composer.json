@@ -12,7 +12,8 @@
     "zendframework/zendframework": "2.3.*",
     "doctrine/doctrine-orm-module": "0.8.*",
     "soflomo/mail": "~0.3",
-    "cbsi/doctrine2-nestedset": "dev-master"
+    "cbsi/doctrine2-nestedset": "dev-master",
+    "ruflin/elastica": "dev-master"
   },
   "require-dev": {
     "zendframework/zend-developer-tools": "dev-master",
