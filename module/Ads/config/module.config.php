@@ -66,17 +66,26 @@ return array(
                     )
                 ),
             ),
-            'searchByFixedParams' => array(
+            'showAds' => array(
                 'type' => 'Zend\Mvc\Router\Http\Segment',
                 'options' => array(
-                    'route' => '/searchByFixedParams',
+                    'route' => '/ads/:adsId',
                     'constraints' => array(
-                        'catId' => '\d+',
-                        'attrId' => '\d+'
+                        'adsId' => '\d+'
                     ),
                     'defaults' => array(
                         'controller' => 'Ads\Controller\Ads',
-                        'action' => 'searchByFixedParams',
+                        'action' => 'showAds',
+                    )
+                ),
+            ),
+            'search' => array(
+                'type' => 'Zend\Mvc\Router\Http\Literal',
+                'options' => array(
+                    'route' => '/search',
+                    'defaults' => array(
+                        'controller' => 'Ads\Controller\Ads',
+                        'action' => 'search',
                     )
                 )
             ),
@@ -117,6 +126,21 @@ return array(
                 );
             },
         )
+    ),
+
+    'view_helpers' => array(
+        'invokables' => array(
+            'thumbHelper' => 'Ads\View\Helper\ThumbHelper'
+        )
+    ),
+
+    'img_thumb' => array(
+        // relative to public dir
+        'img_root' => 'img/ads_imgs',
+        // relative to img_root dir
+        'thumbs' => 'thumbs',
+        'width' => 170,
+        'height' => 170
     ),
 
     'view_manager' => array(
