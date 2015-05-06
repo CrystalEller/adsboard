@@ -93,6 +93,7 @@ FormField.prototype.generators = {
         input.attr({
             'type': 'text',
             'id': 'prop[' + data.id + ']',
+            'name': 'prop[' + data.id + ']',
             'placeholder': data.placeholder
         }).prop("required", data.required);
 
@@ -103,6 +104,7 @@ FormField.prototype.generators = {
         var input = $('<textarea/>').addClass('form-control');
         input.attr({
             'id': 'prop[' + data.id + ']',
+            'name': 'prop[' + data.id + ']',
             'placeholder': data.placeholder
         }).prop("required", data.required);
 
@@ -116,7 +118,8 @@ FormField.prototype.generators = {
             var label = $('<label/>').text(value.value);
             var radio = $('<input/>').attr({
                 'type': 'radio',
-                'value': value.value
+                'name': 'prop[' + data.id + ']',
+                'value': value.id
             });
 
             if (value.id != 0) {
@@ -137,7 +140,8 @@ FormField.prototype.generators = {
             var label = $('<label/>').text(value.value);
             var radio = $('<input/>').attr({
                 'type': 'checkbox',
-                'value': value.value
+                'name': 'prop[' + data.id + '][]',
+                'value': value.id
             });
 
             if (value.id != 0) {
@@ -155,13 +159,13 @@ FormField.prototype.generators = {
         var select = $('<select/>')
             .addClass('selectpicker form-control')
             .attr({
-                'name': 'prop[' + data.id + ']'
+                'name': 'prop[' + data.id + '][]'
             });
         label.attr('for', data.id);
         $.each(data.values, function (index, value) {
             select.append(
                 $('<option/>')
-                    .attr('value', value.value)
+                    .attr('value', value.id)
                     .text(value.value)
             );
 

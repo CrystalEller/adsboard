@@ -45,6 +45,10 @@ div.container a.brand {
     margin-bottom: 20px;
 }
 
+.row-buffer-bottom {
+    margin-bottom: 20px;
+}
+
 #main-navbar {
     padding-bottom: 0px;
     margin-bottom: 0px;
@@ -58,6 +62,20 @@ div.container a.brand {
 
 .ads-preview-border-right {
     border-right: 1px solid #ccc;
+}
+
+#ads-create > .row:not(:first-child) {
+    border-top: 1px solid #eee;
+}
+
+#ads-create > .row {
+    margin-left: 0px;
+    margin-right: 0px;
+}
+
+.form-group.required .control-label:after {
+    content: "*";
+    color: red;
 }
 
 .row.same-columns {
@@ -75,4 +93,24 @@ div.container a.brand {
 
 .nopadding-rgt {
     padding-right: 0px !important;
+}
+
+.display-inline {
+    display: inline
+}
+
+.margin-bottom40 {
+    margin-bottom: 40px;
+}
+
+.margin-bottom25 {
+    margin-bottom: 25px;
+}
+
+.ads-description {
+    overflow-wrap: break-word;
+}
+
+.border-bottom {
+    border-bottom: 1px solid #eee;
 }
