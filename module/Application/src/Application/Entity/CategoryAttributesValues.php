@@ -38,6 +38,11 @@ class CategoryAttributesValues
      */
     private $attrid;
 
+    /**
+     * @ORM\Column(name="owner", type="string", columnDefinition="ENUM('admin', 'user')")
+     */
+    private $owner;
+
 
     /**
      * Get id
@@ -95,5 +100,29 @@ class CategoryAttributesValues
     public function getAttrid()
     {
         return $this->attrid;
+    }
+
+    /**
+     * Set value
+     *
+     * @param string $value
+     *
+     * @return CategoryAttributesValues
+     */
+    public function setOwner($value)
+    {
+        $this->owner = $value;
+
+        return $this;
+    }
+
+    /**
+     * Get value
+     *
+     * @return string
+     */
+    public function getOwner()
+    {
+        return $this->owner;
     }
 }

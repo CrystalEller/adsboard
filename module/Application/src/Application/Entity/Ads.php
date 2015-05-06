@@ -7,9 +7,8 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * Ads
  *
- * @ORM\Table(name="ads", indexes={@ORM\Index(name="userId", columns={"userId"}), @ORM\Index(name="cityid", columns={"cityid"}), @ORM\Index(name="currencyid", columns={"currencyid"}), @ORM\Index(name="categoryid", columns={"categoryid"})})
+ * @ORM\Table(name="ads", indexes={@ORM\Index(name="userId", columns={"userId"}), @ORM\Index(name="cityid", columns={"cityid"}), @ORM\Index(name="currencyid", columns={"currencyid"}), @ORM\Index(name="categoryid", columns={"categoryid"}), @ORM\Index(name="regionid", columns={"regionid"})})
  * @ORM\Entity(repositoryClass="Application\EntityRepository\AdsRepository")
- * @ORM\HasLifecycleCallbacks
  */
 class Ads
 {
@@ -51,6 +50,20 @@ class Ads
     private $created;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="userName", type="string", length=64, nullable=false)
+     */
+    private $username;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="telephone", type="string", length=64, nullable=false)
+     */
+    private $telephone;
+
+    /**
      * @var \Application\Entity\City
      *
      * @ORM\ManyToOne(targetEntity="Application\Entity\City")
@@ -59,16 +72,6 @@ class Ads
      * })
      */
     private $cityid;
-
-    /**
-     * @var \Application\Entity\City
-     *
-     * @ORM\ManyToOne(targetEntity="Application\Entity\Region")
-     * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="regionid", referencedColumnName="id")
-     * })
-     */
-    private $regionid;
 
     /**
      * @var \Application\Entity\Currency
@@ -91,6 +94,16 @@ class Ads
     private $categoryid;
 
     /**
+     * @var \Application\Entity\Region
+     *
+     * @ORM\ManyToOne(targetEntity="Application\Entity\Region")
+     * @ORM\JoinColumns({
+     *   @ORM\JoinColumn(name="regionid", referencedColumnName="id")
+     * })
+     */
+    private $regionid;
+
+    /**
      * @var \Application\Entity\Users
      *
      * @ORM\ManyToOne(targetEntity="Application\Entity\Users")
@@ -101,13 +114,6 @@ class Ads
     private $userid;
 
 
-    /**
-     * @ORM\PrePersist
-     */
-    public function prePersist()
-    {
-        $this->created = new \DateTime();
-    }
 
     /**
      * Get id
@@ -117,16 +123,6 @@ class Ads
     public function getId()
     {
         return $this->id;
-    }
-
-    /**
-     * Get title
-     *
-     * @return string
-     */
-    public function getTitle()
-    {
-        return $this->title;
     }
 
     /**
@@ -144,13 +140,13 @@ class Ads
     }
 
     /**
-     * Get description
+     * Get title
      *
      * @return string
      */
-    public function getDescription()
+    public function getTitle()
     {
-        return $this->description;
+        return $this->title;
     }
 
     /**
@@ -168,13 +164,13 @@ class Ads
     }
 
     /**
-     * Get price
+     * Get description
      *
-     * @return integer
+     * @return string
      */
-    public function getPrice()
+    public function getDescription()
     {
-        return $this->price;
+        return $this->description;
     }
 
     /**
@@ -192,13 +188,13 @@ class Ads
     }
 
     /**
-     * Get created
+     * Get price
      *
-     * @return \DateTime
+     * @return integer
      */
-    public function getCreated()
+    public function getPrice()
     {
-        return $this->created;
+        return $this->price;
     }
 
     /**
@@ -216,13 +212,61 @@ class Ads
     }
 
     /**
-     * Get cityid
+     * Get created
      *
-     * @return \Application\Entity\City
+     * @return \DateTime
      */
-    public function getCityid()
+    public function getCreated()
     {
-        return $this->cityid;
+        return $this->created;
+    }
+
+    /**
+     * Set username
+     *
+     * @param string $username
+     *
+     * @return Ads
+     */
+    public function setUsername($username)
+    {
+        $this->username = $username;
+
+        return $this;
+    }
+
+    /**
+     * Get username
+     *
+     * @return string
+     */
+    public function getUsername()
+    {
+        return $this->username;
+    }
+
+    /**
+     * Set telephone
+     *
+     * @param string $telephone
+     *
+     * @return Ads
+     */
+    public function setTelephone($telephone)
+    {
+        $this->telephone = $telephone;
+
+        return $this;
+    }
+
+    /**
+     * Get telephone
+     *
+     * @return string
+     */
+    public function getTelephone()
+    {
+        return $this->telephone;
     }
 
     /**
@@ -240,37 +284,13 @@ class Ads
     }
 
     /**
-     * Get regionid
+     * Get cityid
      *
-     * @return \Application\Entity\Region
+     * @return \Application\Entity\City
      */
-    public function getRegionid()
+    public function getCityid()
     {
-        return $this->regionid;
-    }
-
-    /**
-     * Set regionid
-     *
-     * @param \Application\Entity\Region $regionid
-     *
-     * @return Ads
-     */
-    public function setRegionid(\Application\Entity\Region $regionid = null)
-    {
-        $this->regionid = $regionid;
-
-        return $this;
-    }
-
-    /**
-     * Get currencyid
-     *
-     * @return \Application\Entity\Currency
-     */
-    public function getCurrencyid()
-    {
-        return $this->currencyid;
+        return $this->cityid;
     }
 
     /**
@@ -288,13 +308,13 @@ class Ads
     }
 
     /**
-     * Get categoryid
+     * Get currencyid
      *
-     * @return \Application\Entity\Categories
+     * @return \Application\Entity\Currency
      */
-    public function getCategoryid()
+    public function getCurrencyid()
     {
-        return $this->categoryid;
+        return $this->currencyid;
     }
 
     /**
@@ -312,13 +332,37 @@ class Ads
     }
 
     /**
-     * Get userid
+     * Get categoryid
      *
-     * @return \Application\Entity\Users
+     * @return \Application\Entity\Categories
      */
-    public function getUserid()
+    public function getCategoryid()
     {
-        return $this->userid;
+        return $this->categoryid;
+    }
+
+    /**
+     * Set regionid
+     *
+     * @param \Application\Entity\Region $regionid
+     *
+     * @return Ads
+     */
+    public function setRegionid(\Application\Entity\Region $regionid = null)
+    {
+        $this->regionid = $regionid;
+
+        return $this;
+    }
+
+    /**
+     * Get regionid
+     *
+     * @return \Application\Entity\Region
+     */
+    public function getRegionid()
+    {
+        return $this->regionid;
     }
 
     /**
@@ -333,5 +377,15 @@ class Ads
         $this->userid = $userid;
 
         return $this;
+    }
+
+    /**
+     * Get userid
+     *
+     * @return \Application\Entity\Users
+     */
+    public function getUserid()
+    {
+        return $this->userid;
     }
 }

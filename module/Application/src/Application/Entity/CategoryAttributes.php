@@ -45,6 +45,20 @@ class CategoryAttributes
      */
     private $catid;
 
+
+    public function toArray()
+    {
+        $arr = array();
+
+        foreach (get_class_methods($this) as $method) {
+            if (preg_match('/^get(\w+)/', $method, $matches)) {
+                $arr[lcfirst($matches[1])] = $this->$method();
+            }
+        }
+
+        return $arr;
+    }
+
     /**
      * Get id
      *

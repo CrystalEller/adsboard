@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
  * AdsValues
  *
  * @ORM\Table(name="ads_values", indexes={@ORM\Index(name="attrid", columns={"valueid"}), @ORM\Index(name="adsid", columns={"adsid"})})
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="Application\EntityRepository\AdsValuesRepository")
  */
 class AdsValues
 {
