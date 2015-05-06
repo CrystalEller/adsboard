@@ -7,26 +7,28 @@ use Doctrine\Common\Persistence\ObjectRepository;
 use FormBuilder\Factory\ValidatorFactory;
 use Zend\Validator\AbstractValidator;
 use Zend\Validator\Exception;
+use Doctrine\ORM\Query;
 
 class FormBuilder extends AbstractValidator
 {
 
     const VALUE_NOT_EXIST = 'notExist';
     const INPUT_ERROR = 'Input Error';
-    protected $objectRepository;
+    protected $attrRepository;
+    protected $valRepository;
     private $messageBuffer = array();
 
     public function __construct($options)
     {
 
-        if (!isset($options['object_repository']) || !$options['object_repository'] instanceof ObjectRepository) {
-            if (!array_key_exists('object_repository', $options)) {
+        if (!isset($options['attr_repository']) || !$options['attr_repository'] instanceof ObjectRepository) {
+            if (!array_key_exists('attr_repository', $options)) {
                 $provided = 'nothing';
             } else {
-                if (is_object($options['object_repository'])) {
-                    $provided = get_class($options['object_repository']);
+                if (is_object($options['attr_repository'])) {
+                    $provided = get_class($options['attr_repository']);
                 } else {
-                    $provided = getType($options['object_repository']);
+                    $provided = getType($options['attr_repository']);
                 }
             }
 
@@ -39,7 +41,8 @@ class FormBuilder extends AbstractValidator
             );
         }
 
-        $this->objectRepository = $options['object_repository'];
+        $this->attrRepository = $options['attr_repository'];
+        $this->valRepository = $options['val_repository'];
 
         if (!isset($options['category_ip']) && is_string($options['category_ip'])) {
             throw new Exception\InvalidArgumentException(
@@ -61,35 +64,45 @@ class FormBuilder extends AbstractValidator
         $prefix = $this->getOption('html_name_prefix');
         $catIp = $this->getOption('category_ip');
 
-        $catProps = $this->objectRepository->findBy(array('catid' => substr($catIp, -1)));
-        $catCounter = 0;
+        $catIds = preg_split('/\./', $catIp);
+        $numberOfCats = sizeof($catIds);
+
+        $catProps = $this->attrRepository->findBy(array('catid' => $catIds[$numberOfCats - 1]));
 
         if (!sizeof($catProps)) {
-            return false;
+            return true;
         }
 
         if (is_array($props)) {
             foreach ($props as $key => $value) {
-                $match = $this->objectRepository
-                    ->findOneBy(array('id' => $key, 'catid' => substr($catIp, -1)));
+                $match = $this->valRepository
+                    ->getValues($key, intval($catIds[$numberOfCats - 1]), 'admin')
+                    ->getResult(Query::HYDRATE_ARRAY);
 
-                if (is_object($match)) {
-                    $data = unserialize($match->getValues());
-                    $validator = ValidatorFactory::create($data['type'], $data);
+                $data = $this->attrRepository
+                    ->findOneBy(array('id' => $key, 'catid' => $catIds[$numberOfCats - 1]))
+                    ->toArray();
+
+                if (!empty($data)) {
+                    if (!empty($match)) {
+                        $data['values'] = array();
+                        foreach ($match as $val) {
+                            $data['values'] = $val;
+                        }
+                    }
+
+                    $validator = ValidatorFactory::create($data['values']['type'], $data['values']);
 
                     if (!$validator->isValid($props[$key])) {
                         $errors = implode(',', array_keys($validator->getMessages()));
                         $this->messageBuffer[$prefix . '[' . $key . ']'] = $errors;
-                    } else {
-                        $catCounter++;
                     }
                 } else {
                     return false;
                 }
             }
 
-            return (sizeof($this->getMessages()) > 0) &&
-            ($catCounter === sizeof($catProps)) ? false : true;
+            return (sizeof($this->getMessages()) > 0) ? false : true;
         }
         return false;
     }

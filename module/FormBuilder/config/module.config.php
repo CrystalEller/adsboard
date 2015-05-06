@@ -41,6 +41,7 @@ return array(
             'FormBuilder' => function ($sm) {
 
                 $postData = $sm->getServiceLocator()->get('Request')->getPost();
+                $em = $sm->getServiceLocator()->get('doctrine.entitymanager.orm_default');
 
                 if (is_array($postData['category'])) {
                     foreach ($postData['category'] as $key => $val) {
@@ -51,8 +52,8 @@ return array(
                 }
 
                 return new \FormBuilder\Validator\FormValidator\FormBuilder(array(
-                    'object_repository' => $sm->getServiceLocator()->get('doctrine.entitymanager.orm_default')->getRepository('\Application\Entity\CategoryAttributes'),
-                    'fields' => 'id',
+                    'attr_repository' => $em->getRepository('\Application\Entity\CategoryAttributes'),
+                    'val_repository' => $em->getRepository('\Application\Entity\CategoryAttributesValues'),
                     'html_name_prefix' => 'prop',
                     'category_ip' => $categoryIp
                 ));

@@ -13,7 +13,6 @@ class FormBuilderController extends AbstractActionController
 
     public function getFormAction()
     {
-        $response = $this->getResponse();
         $data = array();
         $categoryId = $this->params()->fromRoute('catid');
         $attributes = $this->em()
@@ -25,7 +24,7 @@ class FormBuilderController extends AbstractActionController
             foreach ($attributes as $attribute) {
                 $values = $this->em()
                     ->getRepository('Application\Entity\CategoryAttributesValues')
-                    ->getValuesByAttrId($attribute['id'])
+                    ->getValuesByAttrId($attribute['id'], 'admin')
                     ->getResult(Query::HYDRATE_ARRAY);
                 if (!empty($values)) {
                     $attribute['values']['values'] = $values;
@@ -94,7 +93,8 @@ class FormBuilderController extends AbstractActionController
                     $conn->insert('category_attributes_values',
                         array(
                             'attrid' => $lastId,
-                            '`value`' => $value['value']
+                            '`value`' => $value['value'],
+                            'owner' => 'admin'
                         )
                     );
                 }
@@ -121,7 +121,8 @@ class FormBuilderController extends AbstractActionController
                         $conn->insert('category_attributes_values',
                             array(
                                 'attrid' => $field['id'],
-                                '`value`' => $value['value']
+                                '`value`' => $value['value'],
+                                'owner' => 'admin'
                             )
                         );
                     } elseif ($value['status'] === 1) {
