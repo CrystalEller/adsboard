@@ -1,4 +1,6 @@
 body {
+    padding: 0 !important;
+    margin: 0 !important;
     background-color: rgba(207, 207, 207, 0.06);
 }
 
@@ -7,7 +9,7 @@ body {
     padding-left: 0px !important;
 }
 
-a {
+a.left-admin-menu {
     font-size: 1.3em;
     color: #777 !important;
 }
@@ -21,13 +23,25 @@ hr {
 }
 
 #left-menu {
+    position: relative;
+    z-index: 1001;
     border-radius: 5px;
     border-right: 1px solid rgba(64, 44, 44, 0.09);
+    background-color: rgba(255, 255, 255, 1);
+}
+
+#ads-preview-block {
+    display: none;
+    word-wrap: break-word;
+}
+
+#ads-preview-block .panel-body {
+    padding: 10px 10px;
 }
 
 #plugins {
-    height: 300px;
-    border-radius: 5px;
+    overflow-x: hidden;
+    overflow-y: scroll;
 }
 
 .popover {
