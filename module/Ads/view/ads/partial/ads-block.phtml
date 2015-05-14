@@ -8,8 +8,20 @@
                 <li class="list-group-item">
                     <div class="row same-columns">
                         <div class="col-lg-3 ads-preview-border-right">
-                            <img src=""
-                                 alt="..." width="150px" height="90px">
+                            <?php $imgs = glob("./public/img/ads_imgs/{$ad['id']}_*");
+                            if (!empty($imgs)) {
+                                $src = $this->thumbHelper(
+                                    basename(
+                                        glob("./public/img/ads_imgs/{$ad['id']}_*")[0]
+                                    ),
+                                    180,
+                                    90
+                                );
+                            } else {
+                                $src = '/img/no-photo.png';
+                            }
+                            ?>
+                            <img src="<?= $src ?>" alt="..." width="180px" height="90px">
                         </div>
                         <div class="col-lg-6 ads-preview-border-right">
                             <h4>

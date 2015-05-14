@@ -49,7 +49,8 @@
         <div id="links">
             <?php foreach (glob("./public/img/ads_imgs/{$ads->getId()}_*") as $filename): ?>
                 <a href="/img/ads_imgs/<?= basename($filename) ?>" data-gallery>
-                    <img src="<?php echo $this->thumbHelper(basename($filename)); ?>">
+                    <img src="<?php echo $this->thumbHelper(basename($filename)); ?>"
+                         alt="..." width="170" height="170">
                 </a>
             <?php endforeach; ?>
         </div>
