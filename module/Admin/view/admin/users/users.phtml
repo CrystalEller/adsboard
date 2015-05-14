@@ -1,0 +1,271 @@
+<?php echo $this->headLink()
+    ->prependStylesheet($this->basePath() . '/css/bootstrap-table/bootstrap-table.min.css')
+    ->prependStylesheet($this->basePath() . '/css/bootstrap-table/bootstrap-editable.css') ?>
+<table data-toggle="table"
+       data-url="<?= $this->url('getUsers') ?>"
+       data-pagination="true"
+       data-side-pagination="server"
+       data-page-list="[5, 10, 20, 50, 100, 200]"
+       data-search="true"
+    >
+    <thead>
+    <tr>
+        <th class="col-lg-1" data-field="id" data-align="left" data-sortable="true">id</th>
+        <th class="col-lg-5" data-field="email" data-align="left" data-sortable="true">Email</th>
+        <th class="col-lg-2" data-field="ads" data-align="left" data-sortable="true" data-events="adsEvents">
+            Объявления
+        </th>
+        <th class="col-lg-2" data-field="role" data-align="left" data-sortable="true" data-editable="true">Роль</th>
+        <th class="col-lg-2" data-field="stat" data-align="left" data-sortable="true" data-editable="true">Статус
+        </th>
+    </tr>
+    </thead>
+</table>
+
+<div id="ads-preview-block">
+    <div id="back"><a href="#" class="btn btn-link btn-lg">&lt; Назад</a></div>
+
+    <div class="panel-group" id="ads-preview">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#ads-preview" href="#collapseOne">
+                    </a><i class="indicator glyphicon glyphicon-chevron-down  pull-right"></i>
+                </h4>
+            </div>
+            <div id="collapseOne" class="panel-collapse collapse">
+                <div class="panel-body">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<?php echo $this->inlineScript()
+    ->appendFile($this->basePath() . '/js/bootstrap-table/bootstrap-table.js')
+    ->appendFile($this->basePath() . '/js/bootstrap-table/locale/bootstrap-table-ru-RU.min.js')
+    ->appendFile($this->basePath() . '/js/bootstrap-table/bootstrap-editable.min.js') ?>
+
+<script>
+
+    !function ($) {
+
+        $('#ads-preview').on('hidden.bs.collapse', toggleChevron)
+            .on('shown.bs.collapse', toggleChevron)
+            .on('click', '.panel-body .ads-delete', function (e) {
+                var $target = $(e.target),
+                    id = $target.closest('.panel-collapse').attr('id').split('-')[1];
+
+                $('#modal').one('click', '.delete', function () {
+                    $.ajax({
+                        url: '/admin/user/ads/delete/' + id,
+                        success: function (data) {
+                            if (data[0]) {
+                                $('#ads-' + data[0]).parent().remove();
+                                alert('ok');
+                            } else {
+                                alert('error');
+                            }
+                        },
+                        error: function (XMLHttpRequest) {
+                            alert(XMLHttpRequest.status + ': ' + XMLHttpRequest.responseText);
+                        }
+                    });
+                    $('#modal').modal('hide');
+                }).modal()
+                    .find('.modal-body')
+                    .text('Вы уверены, что хотите удалить объявление? (id : ' + id + ')');
+            })
+            .on('click', '.panel-title', function (e) {
+                var $target = $(e.target);
+
+                if (!$target.hasClass('data-uploaded')) {
+                    $.ajax({
+                        url: '/admin/user/ads/' + $target.data('adsId'),
+                        success: function (data) {
+                            var adsData = data.ads;
+                            var panelBody = $('#ads-' + adsData.id + ' .panel-body').text('');
+                            var row = $('<div>');
+                            var props = $('<ul>').addClass('unstyled');
+
+                            panelBody.append(row.clone().text('id:' + adsData.id))
+                                .append(row.clone().text('Имя Пользователя : ' + adsData.username))
+                                .append(row.clone().text('Моб. телефон : ' + adsData.telephone))
+                                .append(row.clone().text('Область : ' + adsData.regionid.name))
+                                .append(row.clone().text('Город : ' + adsData.cityid.name))
+                                .append(row.clone().text('Дата публикации : ' + adsData.created.date))
+                                .append(row.clone().text('Заголовок : ' + adsData.title))
+                                .append(row.clone().text('Атрибуты : '))
+                                .append(props);
+
+                            console.log(data.adsProps);
+
+                            $.each(data.adsProps, function (index, value) {
+                                if (Array.isArray(value)) {
+                                    value = value.join(', ');
+                                }
+                                props.append($('<li>').text(index + ' : ' + value))
+                            });
+
+                            panelBody.append(row.clone().text('Описание:' + adsData.description))
+                                .append(
+                                row.clone().addClass('text-right').html(
+                                    $('<button>')
+                                        .attr('type', 'button')
+                                        .addClass('ads-delete btn btn-xs')
+                                        .text('Удалить объявление')
+                                        .get(0).outerHTML
+                                )
+                            );
+                            $target.addClass('data-uploaded');
+                        },
+                        error: function (XMLHttpRequest) {
+                            alert(XMLHttpRequest.status + ': ' + XMLHttpRequest.responseText);
+                        }
+                    });
+                }
+            }).find('>.panel.panel-default').hide();
+
+
+        function toggleChevron(e) {
+            $(e.target)
+                .prev('.panel-heading')
+                .find("i.indicator")
+                .toggleClass('glyphicon-chevron-down glyphicon-chevron-up');
+        }
+
+        $.extend($.fn.bootstrapTable.defaults, {
+            editable: true,
+            onEditableInit: function () {
+                return false;
+            },
+            onEditableSave: function (field, row, oldValue, $el) {
+                return false;
+            }
+        });
+
+        $.extend($.fn.bootstrapTable.Constructor.EVENTS, {
+            'editable-init.bs.table': 'onEditableInit',
+            'editable-save.bs.table': 'onEditableSave'
+        });
+
+        var BootstrapTable = $.fn.bootstrapTable.Constructor,
+            _initTable = BootstrapTable.prototype.initTable,
+            _initBody = BootstrapTable.prototype.initBody;
+
+        BootstrapTable.prototype.initTable = function () {
+            var that = this;
+            _initTable.apply(this, Array.prototype.slice.apply(arguments));
+
+            $.each(this.options.columns, function (i, column) {
+                var _formatter = column.formatter;
+
+                column.formatter = function (value, row, index) {
+                    var result = _formatter ? _formatter(value, row, index) : value;
+
+                    if (column.editable) {
+                        var a = $('<a>').attr({
+                            'href': 'javascript:void(0)',
+                            'data-name': column.field,
+                            'data-pk': row.id,
+                            'data-url': '/admin/user/update',
+                            'data-value': result
+                        });
+
+                        if (column.field == 'role') {
+                            a.attr({
+                                'data-type': 'select',
+                                'data-source': "['admin','user']"
+                            });
+                        }
+
+                        if (column.field == 'stat') {
+                            a.attr({
+                                'data-type': 'select',
+                                'data-source': "['none','confirmed','banned']"
+                            });
+                        }
+
+                        return a.get(0).outerHTML;
+                    } else {
+                        if (column.field == 'ads') {
+
+                            window.adsEvents = {
+                                'click .showAds': function (e, value, row, index) {
+                                    $.ajax({
+                                        url: e.target.href,
+                                        success: function (data) {
+                                            $('.bootstrap-table').slideUp(1000, function () {
+                                                $('#ads-preview-block').slideDown(1000);
+                                            });
+
+                                            $('#back a').click(function () {
+                                                $('#ads-preview-block').slideUp(800, function () {
+                                                    $('.bootstrap-table').slideDown(1000);
+                                                });
+                                            });
+
+                                            $('#ads-preview>:not(:first)').remove();
+
+                                            $.each(data.adsPreview, function (index, value) {
+                                                var ads = $('#ads-preview .panel.panel-default').eq(0).clone(true);
+
+                                                $('#ads-preview').append(ads.show());
+
+                                                ads.find('.panel-title a').attr({
+                                                    href: '#ads-' + value.id
+                                                }).data('adsId', value.id)
+                                                    .text(value.title);
+
+                                                ads.find('.panel-body').eq(0).parent().attr('id', 'ads-' + value.id);
+                                            });
+                                        },
+                                        error: function (XMLHttpRequest) {
+                                            alert(XMLHttpRequest.status + ': ' + XMLHttpRequest.responseText);
+                                        }
+                                    });
+
+                                    e.preventDefault();
+                                }
+                            };
+
+                            return $('<a>').attr({
+                                'href': '/admin/user/' + row.id + '/showAdsPreview'
+                            }).addClass('showAds').text('Посмотреть').get(0).outerHTML;
+                        }
+                    }
+
+                    return result;
+                };
+            });
+        };
+
+        BootstrapTable.prototype.initBody = function () {
+            var that = this;
+            _initBody.apply(this, Array.prototype.slice.apply(arguments));
+
+            if (!this.options.editable) {
+                return;
+            }
+
+            $.each(this.options.columns, function (i, column) {
+                if (!column.editable) {
+                    return;
+                }
+
+                that.$body.find('a[data-name="' + column.field + '"]').editable(column.editable)
+                    .off('save').on('save', function (e, params) {
+                        var data = that.getData(),
+                            index = $(this).parents('tr[data-index]').data('index'),
+                            row = data[index],
+                            oldValue = row[column.field];
+
+                        row[column.field] = params.submitValue;
+                        that.trigger('editable-save', column.field, row, oldValue, $(this));
+                    });
+            });
+            this.trigger('editable-init');
+        };
+    }(jQuery);
+</script>

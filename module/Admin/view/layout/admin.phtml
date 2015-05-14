@@ -44,19 +44,39 @@
         </div>
     </nav>
 </div>
-<div class="container-fluid nopadding">
+
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-hidden="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Нет</button>
+                <button type="button" class="btn btn-primary delete">Да</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="content" class="container-fluid nopadding">
     <div id="left-menu" class="col-md-3 nopadding">
-        <ul class="nav nav-pills nav-stacked">
-            <li><a href="#">Главная</a></li>
+        <ul class="nav nav-stacked">
+            <li><a class="left-admin-menu" href="#">Главная</a></li>
             <hr>
-            <li><a href="<?= $this->url('showCategories') ?>">Категории</a></li>
+            <li><a class="left-admin-menu" href="<?= $this->url('showCategories') ?>">Категории</a></li>
             <hr>
-            <li><a href="<?= $this->url('showUsers') ?>">Пользователи</a></li>
+            <li><a class="left-admin-menu" href="<?= $this->url('showUsers') ?>">Пользователи</a></li>
         </ul>
     </div>
     <div id="plugins" class="col-md-9">
         <?php echo $this->content; ?>
     </div>
 </div>
+
+<script>
+    $('#left-menu').height($(document).height() - $('#main-navbar').height() - 3);
+    $('#plugins').height($(document).height() - $('#main-navbar').height() - 3);
+</script>
+
 </body>
 </html>
