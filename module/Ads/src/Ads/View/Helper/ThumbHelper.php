@@ -23,24 +23,42 @@ class ThumbHelper extends AbstractHelper implements ServiceLocatorAwareInterface
         $config = $this->getConfig()['img_thumb'];
         $width = (is_numeric($width) && $width > 0) ? $width : $config['width'];
         $height = (is_numeric($height) && $height > 0) ? $height : $config['height'];
-        $imagePath = './public/' . ltrim($config['img_root'], '/') . '/' . ltrim($imageName, '/');
-        $thumbImg = ltrim($config['img_root'], '/') . '/' .
-            ltrim($config['thumbs'], '/') . '/' .
-            ltrim($imageName, '/');
+        $imagePath = $config['img_root'] . '/' . ltrim($imageName, '/');
+        $thumbPath = $config['thumbs'] . '/' . ltrim($imageName, '/');
+        $thumbImg = $this->generateImgName($thumbPath, $width, $height);
 
-        if (!file_exists('./public/' . $thumbImg)) {
+        if (!file_exists($thumbImg)) {
             $imagick = new \Imagick(realpath($imagePath));
-            $imagick->setbackgroundcolor('#ffffff');
-            $imagick->thumbnailImage($width, $height, true, true);
-            $imagick->writeImage('./public/' . $thumbImg);
+
+            if ($imagick->getImageWidth() != $width &&
+                $imagick->getImageHeight() != $height
+            ) {
+                $imagick->setbackgroundcolor('#ffffff');
+                $imagick->thumbnailImage($width, $height, true, true);
+                $imagick->writeImage($thumbImg);
+            }
         }
 
-        return '/' . $thumbImg;
+        return '/' . str_replace($config['clear_from_path'], '', $thumbImg);
     }
 
     public function getConfig()
     {
         return $this->getServiceLocator()->getServiceLocator()->get('Config');
+    }
+
+    public function generateImgName($imgName, $width, $height)
+    {
+        $name = basename($imgName);
+        $pos = mb_strpos($imgName, $name);
+
+        $arr = explode('_', $name);
+        $clearName = implode('', array_slice($arr, 1));
+        $arr[1] = $width;
+        $arr[2] = $height;
+        $arr[3] = $clearName;
+
+        return substr_replace($imgName, implode('_', $arr), $pos);
     }
 
     public function setServiceLocator(ServiceLocatorInterface $serviceLocator)

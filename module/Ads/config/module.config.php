@@ -135,10 +135,11 @@ return array(
     ),
 
     'img_thumb' => array(
-        // relative to public dir
-        'img_root' => 'img/ads_imgs',
-        // relative to img_root dir
-        'thumbs' => 'thumbs',
+        // relative to root dir
+        'img_root' => './public/img/ads_imgs',
+        // relative to root dir
+        'thumbs' => './public/img/ads_imgs/thumbs',
+        'clear_from_path' => './public/',
         'width' => 170,
         'height' => 170
     ),
