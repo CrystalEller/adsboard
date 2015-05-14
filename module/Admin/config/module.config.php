@@ -18,8 +18,67 @@ return array(
                 'options' => array(
                     'route' => '/admin/users',
                     'defaults' => array(
-                        'controller' => 'Admin\Controller\Admin',
+                        'controller' => 'Admin\Controller\Users',
                         'action' => 'users',
+                    ),
+                ),
+            ),
+            'getUsers' => array(
+                'type' => 'Zend\Mvc\Router\Http\Literal',
+                'options' => array(
+                    'route' => '/admin/getUsers',
+                    'defaults' => array(
+                        'controller' => 'Admin\Controller\Users',
+                        'action' => 'getUsers',
+                    ),
+                ),
+            ),
+            'updateUsers' => array(
+                'type' => 'Zend\Mvc\Router\Http\Literal',
+                'options' => array(
+                    'route' => '/admin/user/update',
+                    'defaults' => array(
+                        'controller' => 'Admin\Controller\Users',
+                        'action' => 'update',
+                    ),
+                ),
+            ),
+            'getUserAdsPreview' => array(
+                'type' => 'Zend\Mvc\Router\Http\Segment',
+                'options' => array(
+                    'route' => '/admin/user/:userId/showAdsPreview',
+                    'constraints' => array(
+                        'userId' => '\d+'
+                    ),
+                    'defaults' => array(
+                        'controller' => 'Admin\Controller\Ads',
+                        'action' => 'getAdsPreview',
+                    ),
+                ),
+            ),
+            'deleteAds' => array(
+                'type' => 'Zend\Mvc\Router\Http\Segment',
+                'options' => array(
+                    'route' => '/admin/user/ads/delete/:adsId',
+                    'constraints' => array(
+                        'adsId' => '\d+'
+                    ),
+                    'defaults' => array(
+                        'controller' => 'Admin\Controller\Ads',
+                        'action' => 'deleteAds',
+                    ),
+                ),
+            ),
+            'getUserAds' => array(
+                'type' => 'Zend\Mvc\Router\Http\Segment',
+                'options' => array(
+                    'route' => '/admin/user/ads/:adsId',
+                    'constraints' => array(
+                        'adsId' => '\d+'
+                    ),
+                    'defaults' => array(
+                        'controller' => 'Admin\Controller\Ads',
+                        'action' => 'getAds',
                     ),
                 ),
             ),
@@ -42,7 +101,9 @@ return array(
     'controllers' => array(
         'invokables' => array(
             'Admin\Controller\Admin' => 'Admin\Controller\AdminController',
-            'Admin\Controller\Category' => 'Admin\Controller\CategoryController'
+            'Admin\Controller\Category' => 'Admin\Controller\CategoryController',
+            'Admin\Controller\Users' => 'Admin\Controller\UsersController',
+            'Admin\Controller\Ads' => 'Admin\Controller\AdsController'
         ),
     ),
 
