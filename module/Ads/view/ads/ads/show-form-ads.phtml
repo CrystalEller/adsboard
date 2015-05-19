@@ -184,15 +184,16 @@
 
             target.ajaxSubmit({
                 success: function (data) {
+
+                    $('.help-block')
+                        .html('')
+                        .closest('div')
+                        .removeClass('has-error')
+                        .addClass('has-success');
+
                     if (data.success) {
                         window.location.href = data.redirect;
                     } else {
-                        $('.help-block')
-                            .html('')
-                            .closest('div.has-error')
-                            .removeClass('has-error')
-                            .addClass('has-success');
-
                         $.each(data.formErrors, function (name, value) {
                             var $elem = $('[name^="' + name + '"]');
 
@@ -204,6 +205,7 @@
 
                             $elem.closest('div.form-group')
                                 .addClass('has-error')
+                                .removeClass('has-success')
                                 .find('span.help-block')
                                 .html(value + '\n');
                         });
