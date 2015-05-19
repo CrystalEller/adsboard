@@ -27,6 +27,11 @@ return array(
             'Zend\Cache\Service\StorageCacheAbstractServiceFactory',
             'Zend\Log\LoggerAbstractServiceFactory',
         ),
+        'factories' => array(
+            'elastica-client' => 'Application\Service\ElasticaClientFactory',
+            'Application\Hydrator\Doctrine' => 'Application\Hydrator\Doctrine',
+            'Application\Service\NestedSetCategories' => 'Application\Service\NestedSetCategoriesFactory'
+        ),
     ),
     'controllers' => array(
         'invokables' => array(

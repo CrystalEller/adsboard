@@ -3,17 +3,21 @@
 namespace Admin\Controller;
 
 
+use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Query;
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\JsonModel;
 
 class AdsController extends AbstractActionController
 {
+    protected $em;
+
     public function deleteAdsAction()
     {
+        $em = $this->getEntityManager();
         $adsId = $this->params('adsId');
 
-        $this->em()->createQueryBuilder()
+        $em->createQueryBuilder()
             ->delete('Application\Entity\Ads', 'a')
             ->where('a.id = ?1')
             ->setParameter(1, $adsId)
@@ -26,9 +30,10 @@ class AdsController extends AbstractActionController
 
     public function getAdsPreviewAction()
     {
+        $em = $this->getEntityManager();
         $userId = $this->params('userId');
 
-        $ads = $this->em()->createQueryBuilder()
+        $ads = $em->createQueryBuilder()
             ->select('a.id, a.title')
             ->from('Application\Entity\Ads', 'a')
             ->where('a.userid = ?1')
@@ -43,9 +48,10 @@ class AdsController extends AbstractActionController
 
     public function getAdsAction()
     {
+        $em = $this->getEntityManager();
         $adsId = $this->params('adsId');
 
-        $ads = $this->em()->createQueryBuilder()
+        $ads = $em->createQueryBuilder()
             ->select(array('a', 'r', 'city', 'currency'))
             ->from('Application\Entity\Ads', 'a')
             ->leftjoin('a.regionid', 'r')
@@ -57,7 +63,7 @@ class AdsController extends AbstractActionController
             ->getQuery()
             ->getResult(Query::HYDRATE_ARRAY);
 
-        $props = $this->em()->createQueryBuilder()
+        $props = $em->createQueryBuilder()
             ->select(array('av', 'val', 'attr'))
             ->from('Application\Entity\AdsValues', 'av')
             ->join('av.adsid', 'a', 'WITH', 'av.adsid=?1')
@@ -78,5 +84,20 @@ class AdsController extends AbstractActionController
             'ads' => !empty($ads) ? $ads[0] : null,
             'adsProps' => $propsGroups
         ));
+    }
+
+    public function setEntityManager(EntityManager $em)
+    {
+        $this->em = $em;
+
+        return $this;
+    }
+
+    public function getEntityManager()
+    {
+        if (!$this->em) {
+            $this->em = $this->getServiceLocator()->get('doctrine.entitymanager.orm_default');
+        }
+        return $this->em;
     }
 }

@@ -2,9 +2,8 @@
 
 namespace Ads\Controller;
 
-use Application\Entity\AdsValues;
+use Doctrine\ORM\EntityManager;
 use Zend\Mvc\Controller\AbstractActionController;
-use DoctrineModule\Stdlib\Hydrator\DoctrineObject as DoctrineHydrator;
 use Doctrine\ORM\Query;
 use Zend\View\Model\ViewModel;
 use Zend\View\Model\JsonModel;
@@ -13,21 +12,22 @@ use Application\Entity\Ads;
 
 class AdsController extends AbstractActionController
 {
+    protected $em;
+    protected $nsc;
 
     public function showFormAdsAction()
     {
-        $cats = $this->em()
-            ->getRepository('Application\Entity\Categories')
+        $em = $this->getEntityManager();
+
+        $cats = $em->getRepository('Application\Entity\Categories')
             ->getRootCategories()
             ->getResult(Query::HYDRATE_ARRAY);
 
-        $regions = $this->em()
-            ->getRepository('Application\Entity\Region')
+        $regions = $em->getRepository('Application\Entity\Region')
             ->getAll()
             ->getResult(Query::HYDRATE_ARRAY);
 
-        $currencies = $this->em()
-            ->getRepository('Application\Entity\Currency')
+        $currencies = $em->getRepository('Application\Entity\Currency')
             ->getAll()
             ->getResult(Query::HYDRATE_ARRAY);
 
@@ -88,7 +88,8 @@ class AdsController extends AbstractActionController
                     'formErrors' => $messages
                 ));
             } else {
-                $hydrator = new DoctrineHydrator($this->em());
+                $em = $this->getEntityManager();
+                $hydrator = $this->getServiceLocator()->get('Application\Hydrator\Doctrine');
                 $ads = new Ads();
 
                 $data = array(
@@ -109,11 +110,10 @@ class AdsController extends AbstractActionController
 
                 $ads = $hydrator->hydrate($data, $ads);
 
-                $this->em()->persist($ads);
-                $this->em()->flush();
+                $em->persist($ads);
+                $em->flush();
 
-                $this->em()
-                    ->getRepository('Application\Entity\AdsValues')
+                $em->getRepository('Application\Entity\AdsValues')
                     ->saveValues($props, $ads);
 
                 $this->move_uploaded_imgs($files, $ads->getId());
@@ -130,12 +130,11 @@ class AdsController extends AbstractActionController
     public function showAdsAction()
     {
         $adsId = $this->params('adsId', 0);
+        $em = $this->getEntityManager();
 
-        $ads = $this->em()
-            ->find('Application\Entity\Ads', $adsId);
+        $ads = $em->find('Application\Entity\Ads', $adsId);
 
-        $props = $this->em()
-            ->getRepository('Application\Entity\AdsValues')
+        $props = $em->getRepository('Application\Entity\AdsValues')
             ->findBy(array('adsid' => $adsId));
 
         $propsGroups = array();
@@ -200,20 +199,18 @@ class AdsController extends AbstractActionController
     {
         $request = $this->getRequest();
         $page = $request->getQuery('page', 0);
+        $em = $this->getEntityManager();
         $limit = 10;
 
-        $ads = $this->em()
-            ->getRepository('Application\Entity\Ads')
+        $ads = $em->getRepository('Application\Entity\Ads')
             ->getAdsAll($page, $limit)
             ->getResult(Query::HYDRATE_ARRAY);
 
-        $number = $this->em()
-            ->getRepository('Application\Entity\Ads')
+        $number = $em->getRepository('Application\Entity\Ads')
             ->countAdsAll()
             ->getSingleScalarResult();
 
-        $categories = $this->em()
-            ->getRepository('Application\Entity\Categories')
+        $categories = $em->getRepository('Application\Entity\Categories')
             ->getRootCategories()
             ->getResult(Query::HYDRATE_ARRAY);
 
@@ -232,20 +229,19 @@ class AdsController extends AbstractActionController
     public function adsByCategoryAction()
     {
         $request = $this->getRequest();
+        $em = $this->getEntityManager();
+        $nsc = $this->getNestedSetCategories();
         $page = $request->getQuery('page', 0);
         $catId = $this->params('catId', 0);
         $limit = 10;
 
-        $category = $this->em()
-            ->find('Application\Entity\Categories', $catId);
+        $category = $em->find('Application\Entity\Categories', $catId);
 
         if (!empty($category)) {
             $catsIds = array();
             $catsIds[] = $category->getId();
 
-            $cats = $this->nsm('Application\Entity\Categories')
-                ->wrapNode($category)
-                ->getDescendants();
+            $cats = $nsc->wrapNode($category)->getDescendants();
 
             if (!empty($cats)) {
                 $catsData = array();
@@ -264,19 +260,16 @@ class AdsController extends AbstractActionController
                     'name' => $category->getName()
                 );
 
-                $attributes = $this->em()
-                    ->getRepository('Application\Entity\CategoryAttributesValues')
+                $attributes = $em->getRepository('Application\Entity\CategoryAttributesValues')
                     ->getValuesByCategoryId($category->getId(), 'user')
                     ->getResult(Query::HYDRATE_ARRAY);
             }
 
-            $ads = $this->em()
-                ->getRepository('Application\Entity\Ads')
+            $ads = $em->getRepository('Application\Entity\Ads')
                 ->getAdsByCategories($page, $catsIds, $limit)
                 ->getResult(Query::HYDRATE_ARRAY);
 
-            $numberAds = $this->em()
-                ->getRepository('Application\Entity\Ads')
+            $numberAds = $em->getRepository('Application\Entity\Ads')
                 ->countAdsByCategories($catsIds)
                 ->getSingleScalarResult();
 
@@ -304,14 +297,14 @@ class AdsController extends AbstractActionController
         $request = $this->getRequest();
         $page = $request->getQuery('page', 0);
         $data = $request->getQuery()->toArray();
-        $view = new ViewModel();
+        $em = $this->getEntityManager();
         $search = $this->getServiceLocator()->get('Ads\Service\Search');
+        $view = new ViewModel();
 
         $ads = $search->setData($data)->search($page, $limit);
         $number = $search->countAds();
 
-        $attrsVals = $this->em()
-            ->getRepository('Application\Entity\CategoryAttributesValues')
+        $attrsVals = $em->getRepository('Application\Entity\CategoryAttributesValues')
             ->getValuesByCategoryId($data['categoryid'], 'user')
             ->getResult(Query::HYDRATE_ARRAY);
 
@@ -341,6 +334,29 @@ class AdsController extends AbstractActionController
                 move_uploaded_file($file['tmp_name'], $newFileName);
             }
         }
+    }
+
+    public function setEntityManager(EntityManager $em)
+    {
+        $this->em = $em;
+
+        return $this;
+    }
+
+    public function getEntityManager()
+    {
+        if (!$this->em) {
+            $this->em = $this->getServiceLocator()->get('doctrine.entitymanager.orm_default');
+        }
+        return $this->em;
+    }
+
+    public function getNestedSetCategories()
+    {
+        if (!$this->nsc) {
+            $this->nsc = $this->getServiceLocator()->get('Application\Service\NestedSetCategories');
+        }
+        return $this->nsc;
     }
 }
 

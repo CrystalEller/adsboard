@@ -100,31 +100,9 @@ return array(
 
     'service_manager' => array(
         'factories' => array(
-            'Ads\Filter\AdsFilter' => function ($sm) {
-
-                $entityManager = $sm->get('doctrine.entitymanager.orm_default');
-                $config = new \DoctrineExtensions\NestedSet\Config($entityManager, 'Application\Entity\Categories');
-                $nsm = new \DoctrineExtensions\NestedSet\Manager($config);
-
-                return new \Ads\Filter\AdsFilter($entityManager, $nsm);
-            },
-            'Ads\Filter\PriceFilter' => function ($sm) {
-                return new \Ads\Filter\PriceFilter(
-                    $sm->get('doctrine.entitymanager.orm_default')
-                );
-            },
-            'Ads\Service\AdsSelector' => function ($sm) {
-
-                return new \Ads\Service\AdsSelectorService(
-                    $sm->get('doctrine.entitymanager.orm_default')
-                );
-            },
-            'Ads\Service\Search' => function ($sm) {
-
-                return new \Ads\Service\SearchService(
-                    $sm->get('doctrine.entitymanager.orm_default')
-                );
-            },
+            'Ads\Filter\AdsFilter' => 'Ads\Filter\Factory\AdsFilterFactory',
+            'Ads\Filter\PriceFilter' => 'Ads\Filter\Factory\PriceFilterFactory',
+            'Ads\Service\Search' => 'Ads\Service\Factory\SearchServiceFactory'
         )
     ),
 

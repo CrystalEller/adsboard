@@ -3,27 +3,32 @@
 namespace Admin\Controller;
 
 use Application\Entity\Categories;
+use Doctrine\ORM\EntityManager;
 use Zend\View\Model\JsonModel;
 use Zend\Mvc\Controller\AbstractActionController;
 
 class CategoryController extends AbstractActionController
 {
+    protected $nsc;
+    protected $em;
+
     public function indexAction()
     {
         $request = $this->getRequest();
 
         if ($request->isXmlHttpRequest()) {
             $id = $request->getPost('id');
-            $size = 0;
+            $em = $this->getEntityManager();
 
             if ($id === '0') {
-                $cats = $this->em()->createQuery("select c.id, c.name, c.level from Application\Entity\Categories c where c.id=c.root")
+                $cats = $em->createQuery("select c.id, c.name, c.level from Application\Entity\Categories c
+                                                                        where c.id=c.root")
                     ->getResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
             } else {
-                $rootCat = $this->em()->find('Application\Entity\Categories', $id);
-                $cats = $this->nsm('Application\Entity\Categories')
-                    ->wrapNode($rootCat)
-                    ->getChildren();
+                $nsc = $this->getNestedSetCategories();
+
+                $rootCat = $em->find('Application\Entity\Categories', $id);
+                $cats = $nsc->wrapNode($rootCat)->getChildren();
                 $data = array();
                 $size = sizeof($cats);
 
@@ -47,12 +52,14 @@ class CategoryController extends AbstractActionController
         $request = $this->getRequest();
 
         if ($request->isXmlHttpRequest()) {
+            $em = $this->getEntityManager();
+            $nsc = $this->getNestedSetCategories();
             $filter = $this->getServiceLocator()->get('Admin\Form\CategoryFilter');
+
             $filter->setData($request->getPost());
             $filter->setValidationGroup(array('name'));
 
             if ($filter->isValid()) {
-                $nsm = $this->nsm('Application\Entity\Categories');
                 $name = $request->getPost('name');
                 $pid = $request->getPost('id');
 
@@ -60,14 +67,14 @@ class CategoryController extends AbstractActionController
                 $newCat->setName($name);
 
                 if (!empty($pid)) {
-                    $parentCat = $this->em()->find('Application\Entity\Categories', $pid);
+                    $parentCat = $em->find('Application\Entity\Categories', $pid);
                     if (is_object($parentCat)) {
                         $newCat->setLevel($parentCat->getLevel() + 1);
-                        $nsm->wrapNode($parentCat)->addChild($newCat);
+                        $nsc->wrapNode($parentCat)->addChild($newCat);
                     }
                 } else {
                     $newCat->setLevel(0);
-                    $nsm->createRoot($newCat);
+                    $nsc->createRoot($newCat);
                 }
 
                 return new JsonModel(array(
@@ -91,11 +98,11 @@ class CategoryController extends AbstractActionController
             $filter->setData($request->getPost());
 
             if ($filter->isValid()) {
+                $em = $this->getEntityManager();
                 $name = $request->getPost('name');
                 $id = $request->getPost('id');
 
-                $this->em()
-                    ->getConnection()
+                $em->getConnection()
                     ->update(
                         'categories',
                         array('name' => $name),
@@ -119,15 +126,18 @@ class CategoryController extends AbstractActionController
         $request = $this->getRequest();
 
         if ($request->isXmlHttpRequest()) {
+            $em = $this->getEntityManager();
+            $nsc = $this->getNestedSetCategories();
             $filter = $this->getServiceLocator()->get('Admin\Form\CategoryFilter');
+
             $filter->setData($request->getPost())
                 ->setValidationGroup('id');
 
             if ($filter->isValid()) {
                 $id = $request->getPost('id');
 
-                $category = $this->em()->find('Application\Entity\Categories', $id);
-                $node = $this->nsm('Application\Entity\Categories')->wrapNode($category);
+                $category = $em->find('Application\Entity\Categories', $id);
+                $node = $nsc->wrapNode($category);
                 $node->delete();
 
                 return new JsonModel(array(1));
@@ -137,5 +147,28 @@ class CategoryController extends AbstractActionController
                 ));
             }
         }
+    }
+
+    public function getNestedSetCategories()
+    {
+        if (!$this->nsc) {
+            $this->nsc = $this->getServiceLocator()->get('Application\Service\NestedSetCategories');
+        }
+        return $this->nsc;
+    }
+
+    public function setEntityManager(EntityManager $em)
+    {
+        $this->em = $em;
+
+        return $this;
+    }
+
+    public function getEntityManager()
+    {
+        if (!$this->em) {
+            $this->em = $this->getServiceLocator()->get('doctrine.entitymanager.orm_default');
+        }
+        return $this->em;
     }
 }

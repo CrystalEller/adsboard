@@ -10,6 +10,8 @@ use Zend\View\Model\JsonModel;
 
 class UsersController extends AbstractActionController
 {
+    protected $em;
+
     public function usersAction()
     {
         return new ViewModel();
@@ -19,8 +21,9 @@ class UsersController extends AbstractActionController
     {
         $request = $this->getRequest();
         $data = $request->getQuery()->toArray();
+        $em = $this->getEntityManager();
 
-        $users = $this->em()->createQueryBuilder()
+        $users = $em->createQueryBuilder()
             ->select('u')
             ->from('Application\Entity\Users', 'u')
             ->setFirstResult($data['offset'])
@@ -39,8 +42,9 @@ class UsersController extends AbstractActionController
 
         if ($request->isPost()) {
             $data = $request->getPost()->toArray();
+            $em = $this->getEntityManager();
 
-            $this->em()->createQueryBuilder()
+            $em->createQueryBuilder()
                 ->update('Application\Entity\Users', 'u')
                 ->set("u.{$data['name']}", '?1')
                 ->where('u.id = ?2')
@@ -51,5 +55,20 @@ class UsersController extends AbstractActionController
 
             return new JsonModel(array(1));
         }
+    }
+
+    public function setEntityManager(EntityManager $em)
+    {
+        $this->em = $em;
+
+        return $this;
+    }
+
+    public function getEntityManager()
+    {
+        if (!$this->em) {
+            $this->em = $this->getServiceLocator()->get('doctrine.entitymanager.orm_default');
+        }
+        return $this->em;
     }
 }

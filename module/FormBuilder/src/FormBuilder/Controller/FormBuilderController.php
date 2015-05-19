@@ -3,6 +3,7 @@
 namespace FormBuilder\Controller;
 
 
+use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Query;
 use Zend\Mvc\Controller\AbstractActionController;
 use \Doctrine\DBAL\Connection;
@@ -10,20 +11,20 @@ use Zend\View\Model\JsonModel;
 
 class FormBuilderController extends AbstractActionController
 {
+    protected $em;
 
     public function getFormAction()
     {
         $data = array();
+        $em = $this->getEntityManager();
         $categoryId = $this->params()->fromRoute('catid');
-        $attributes = $this->em()
-            ->getRepository('Application\Entity\CategoryAttributes')
+        $attributes = $em->getRepository('Application\Entity\CategoryAttributes')
             ->getAttrsByCategoryId($categoryId)
             ->getResult(Query::HYDRATE_ARRAY);
 
         if (!empty($attributes)) {
             foreach ($attributes as $attribute) {
-                $values = $this->em()
-                    ->getRepository('Application\Entity\CategoryAttributesValues')
+                $values = $em->getRepository('Application\Entity\CategoryAttributesValues')
                     ->getValuesByAttrId($attribute['id'], 'admin')
                     ->getResult(Query::HYDRATE_ARRAY);
                 if (!empty($values)) {
@@ -45,7 +46,9 @@ class FormBuilderController extends AbstractActionController
     public function changeFormAction()
     {
         $request = $this->getRequest();
-        $conn = $this->em()->getConnection();
+        $em = $this->getEntityManager();
+
+        $conn = $em->getConnection();
 
         if ($request->isPost()) {
 
@@ -117,7 +120,7 @@ class FormBuilderController extends AbstractActionController
 
             if (!empty($field['values'])) {
                 foreach ($field['values'] as $value) {
-                    if ($value['status'] === 0) {
+                    if ($value['status'] === '0') {
                         $conn->insert('category_attributes_values',
                             array(
                                 'attrid' => $field['id'],
@@ -125,7 +128,7 @@ class FormBuilderController extends AbstractActionController
                                 'owner' => 'admin'
                             )
                         );
-                    } elseif ($value['status'] === 1) {
+                    } elseif ($value['status'] === '1') {
                         $conn->update('category_attributes_values',
                             array(
                                 '`value`' => $value['value']
@@ -149,5 +152,20 @@ class FormBuilderController extends AbstractActionController
                 array('id' => $field['id'])
             );
         }
+    }
+
+    public function setEntityManager(EntityManager $em)
+    {
+        $this->em = $em;
+
+        return $this;
+    }
+
+    public function getEntityManager()
+    {
+        if (!$this->em) {
+            $this->em = $this->getServiceLocator()->get('doctrine.entitymanager.orm_default');
+        }
+        return $this->em;
     }
 }

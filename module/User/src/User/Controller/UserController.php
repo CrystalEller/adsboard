@@ -2,7 +2,9 @@
 
 namespace User\Controller;
 
-use Zend\Debug\Debug;
+use Doctrine\ORM\EntityManager;
+use User\Form\RegistrationForm;
+use Zend\Authentication\AuthenticationService;
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\ViewModel;
 use Application\Entity\Users;
@@ -10,6 +12,8 @@ use Application\Entity\Users;
 class UserController extends AbstractActionController
 {
     protected $em;
+    protected $registrationForm;
+    protected $authService;
 
     public function loginAction()
     {
@@ -18,7 +22,7 @@ class UserController extends AbstractActionController
         $form->setData($request->getPost());
 
         if ($request->isPost()) {
-            $authService = $this->getServiceLocator()->get('Zend\Authentication\AuthenticationService');
+            $authService = $this->getAuthService();
 
             $adapter = $authService->getAdapter();
             $adapter->setIdentityValue($request->getPost('email'));
@@ -35,12 +39,11 @@ class UserController extends AbstractActionController
         }
 
         return array('form' => $form);
-
     }
 
     public function logoutAction()
     {
-        $authService = $this->getServiceLocator()->get('Zend\Authentication\AuthenticationService');
+        $authService = $this->getAuthService();
         $authService->getStorage()->clear();
 
         return $this->redirect()->toRoute('home');
@@ -68,20 +71,11 @@ class UserController extends AbstractActionController
         return array();
     }
 
-    public function getEntityManager()
-    {
-        if (null === $this->em) {
-            $this->em = $this->getServiceLocator()->get('doctrine.entitymanager.orm_default');
-        }
-        return $this->em;
-    }
-
     public function registrationAction()
     {
-
         $request = $this->getRequest();
-        $form = $this->getServiceLocator()->get('User\Form\RegistrationForm');
-
+        $form = $this->getRegistrationForm();
+        $em = $this->getEntityManager();
 
         if ($request->isPost()) {
             $form->setData($request->getPost());
@@ -100,8 +94,8 @@ class UserController extends AbstractActionController
                     'hash' => $user->getPassword(),
                 ));
 
-                $this->getEntityManager()->persist($user);
-                $this->getEntityManager()->flush();
+                $em->persist($user);
+                $em->flush();
 
 
                 $view = new ViewModel();
@@ -111,48 +105,51 @@ class UserController extends AbstractActionController
         }
 
         return array('form' => $form);
+    }
 
-        /* $form=$this->getServiceLocator()->get('User\Form\RegistrationForm');
-         $request = $this->getRequest();
-         $response = $this->getResponse();
+    public function setAuthService(AuthenticationService $authService)
+    {
+        $this->authService = $authService;
 
-         $messages = array();
-         if ($request->isXmlHttpRequest()){
+        return $this;
+    }
 
-             $form->setData($request->getPost());
-             if ( ! $form->isValid()) {
-                 $errors = $form->getMessages();
-                 foreach($errors as $key=>$row)
-                 {
-                     if (!empty($row) && $key != 'submit') {
-                         foreach($row as $keyer => $rower)
-                         {
+    public function getAuthService()
+    {
+        if (!$this->authService) {
+            $this->authService = $this->getServiceLocator()->get('Zend\Authentication\AuthenticationService');
+        }
+        return $this->authService;
+    }
 
-                             $messages[$key][] = $rower;
-                         }
-                     }
-                 }
-             }
+    public function setEntityManager(EntityManager $em)
+    {
+        $this->em = $em;
 
-             if (!empty($messages)){
-                 $response->setContent(\Zend\Json\Json::encode($messages));
-                 return $response;
-             } else {
-                 $user = new \User\Entity\Users();
-                 $bcrypt = new Bcrypt();
+        return $this;
+    }
 
-                 $password = $bcrypt->create($request->getPost('password1'));
-                 $user->setEmail($request->getPost('email'))
-                     ->setPassword($password);
+    public function getEntityManager()
+    {
+        if (!$this->em) {
+            $this->em = $this->getServiceLocator()->get('doctrine.entitymanager.orm_default');
+        }
+        return $this->em;
+    }
 
-                 $this->getEntityManager()->persist($user);
-                 $this->getEntityManager()->flush();
+    public function setRegistrationForm(RegistrationForm $registrationForm)
+    {
+        $this->registrationForm = $registrationForm;
 
-                 $this->redirect()->toRoute('home');
-             }
-         }else{
-             return array('form'=>$form);
-         }*/
+        return $this;
+    }
+
+    public function getRegistrationForm()
+    {
+        if (!$this->registrationForm) {
+            $this->registrationForm = $this->getServiceLocator()->get('User\Form\RegistrationForm');
+        }
+        return $this->registrationForm;
     }
 }
 
