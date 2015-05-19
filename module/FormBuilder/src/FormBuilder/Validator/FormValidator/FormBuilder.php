@@ -84,14 +84,18 @@ class FormBuilder extends AbstractValidator
                     ->toArray();
 
                 if (!empty($data)) {
+                    $type = $data['values']['type'];
+
                     if (!empty($match)) {
-                        $data['values'] = array();
                         foreach ($match as $val) {
-                            $data['values'] = $val;
+                            $data['values']['values'][] = strval($val['id']);
                         }
                     }
 
-                    $validator = ValidatorFactory::create($data['values']['type'], $data['values']);
+                    $validator = ValidatorFactory::create($type, $data['values']);
+
+
+                    //var_dump($props[$key]);
 
                     if (!$validator->isValid($props[$key])) {
                         $errors = implode(',', array_keys($validator->getMessages()));

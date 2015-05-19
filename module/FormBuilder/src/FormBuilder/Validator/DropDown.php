@@ -23,7 +23,7 @@ class DropDown extends AbstractValidator
     public function __construct($data)
     {
 
-        if (!is_array($data['values'])) {
+        if (empty($data['values']) || !is_array($data['values'])) {
             throw new Exception\InvalidArgumentException(
                 'Option "values" is required and must be an array'
             );
@@ -35,10 +35,10 @@ class DropDown extends AbstractValidator
     public function isValid($value)
     {
         $validator = new InArray();
-        $validator->setHaystack(array($this->data['values']));
+        $validator->setHaystack($this->data['values']);
 
-        if (!is_array($value)) {
-            if (!$validator->isValid($value)) {
+        if (is_array($value) && !empty($value[0])) {
+            if (!$validator->isValid($value[0])) {
                 $this->error(self::VALUE_NOT_EXIST, $value);
                 return false;
             }
