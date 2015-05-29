@@ -8,7 +8,7 @@ return array(
                 'options' => array(
                     'route' => '/showFormAds',
                     'defaults' => array(
-                        'controller' => 'Ads\Controller\Ads',
+                        'controller' => 'Ads\Controller\AdsForm',
                         'action' => 'showFormAds',
                     ),
                 ),
@@ -18,7 +18,7 @@ return array(
                 'options' => array(
                     'route' => '/getCities',
                     'defaults' => array(
-                        'controller' => 'Ads\Controller\Ads',
+                        'controller' => 'Ads\Controller\AdsForm',
                         'action' => 'getCities',
                     ),
                 ),
@@ -28,7 +28,7 @@ return array(
                 'options' => array(
                     'route' => '/getCategories',
                     'defaults' => array(
-                        'controller' => 'Ads\Controller\Ads',
+                        'controller' => 'Ads\Controller\AdsForm',
                         'action' => 'getCategories',
                     ),
                 ),
@@ -38,8 +38,63 @@ return array(
                 'options' => array(
                     'route' => '/createAds',
                     'defaults' => array(
-                        'controller' => 'Ads\Controller\Ads',
-                        'action' => 'create',
+                        'controller' => 'Ads\Controller\UserAds',
+                        'action' => 'createAds',
+                    ),
+                ),
+            ),
+            'getUserAds' => array(
+                'type' => 'Zend\Mvc\Router\Http\Literal',
+                'options' => array(
+                    'route' => '/user/showAds',
+                    'defaults' => array(
+                        'controller' => 'Ads\Controller\UserAds',
+                        'action' => 'getAds',
+                    ),
+                ),
+            ),
+            'updateUserAds' => array(
+                'type' => 'Zend\Mvc\Router\Http\Segment',
+                'options' => array(
+                    'route' => '/user/updateAds/:adsId',
+                    'constraints' => array(
+                        'adsId' => '\d+'
+                    )
+                ),
+                'may_terminate' => false,
+                'child_routes' => array(
+                    'getUpdateAdsForm' => array(
+                        'type' => 'Zend\Mvc\Router\Http\Method',
+                        'options' => array(
+                            'verb' => 'get',
+                            'defaults' => array(
+                                'controller' => 'Ads\Controller\AdsForm',
+                                'action' => 'showUpdateFormAds',
+                            ),
+                        )
+                    ),
+                    'postUpdateAdsForm' => array(
+                        'type' => 'Zend\Mvc\Router\Http\Method',
+                        'options' => array(
+                            'verb' => 'post',
+                            'defaults' => array(
+                                'controller' => 'Ads\Controller\UserAds',
+                                'action' => 'updateAds',
+                            ),
+                        )
+                    )
+                )
+            ),
+            'deleteUserAds' => array(
+                'type' => 'Zend\Mvc\Router\Http\Segment',
+                'options' => array(
+                    'route' => '/user/deleteAds/:adsId',
+                    'constraints' => array(
+                        'adsId' => '\d+'
+                    ),
+                    'defaults' => array(
+                        'controller' => 'Ads\Controller\UserAds',
+                        'action' => 'deleteAds',
                     ),
                 ),
             ),
@@ -95,6 +150,8 @@ return array(
     'controllers' => array(
         'invokables' => array(
             'Ads\Controller\Ads' => 'Ads\Controller\AdsController',
+            'Ads\Controller\UserAds' => 'Ads\Controller\UserAdsController',
+            'Ads\Controller\AdsForm' => 'Ads\Controller\AdsFormController'
         ),
     ),
 
@@ -103,7 +160,10 @@ return array(
             'Ads\Filter\AdsFilter' => 'Ads\Filter\Factory\AdsFilterFactory',
             'Ads\Filter\PriceFilter' => 'Ads\Filter\Factory\PriceFilterFactory',
             'Ads\Service\Search' => 'Ads\Service\Factory\SearchServiceFactory'
-        )
+        ),
+        'invokables' => array(
+            'Ads\Filter\AdsUpdateFilter' => 'Ads\Filter\AdsUpdateFilter',
+        ),
     ),
 
     'view_helpers' => array(
