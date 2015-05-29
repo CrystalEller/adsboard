@@ -117,7 +117,7 @@ class UserController extends AbstractActionController
     public function getAuthService()
     {
         if (!$this->authService) {
-            $this->authService = $this->getServiceLocator()->get('Zend\Authentication\AuthenticationService');
+            $this->authService = $this->getServiceLocator()->get('doctrine.authenticationservice.orm_default');
         }
         return $this->authService;
     }

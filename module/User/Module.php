@@ -1,6 +1,7 @@
 <?php
 namespace User;
 
+use Zend\Mvc\MvcEvent;
 use Zend\Session\SessionManager;
 use Zend\Session\Container;
 use Zend\Mvc\ModuleRouteListener;
@@ -23,15 +24,36 @@ class Module
         );
     }
 
-    public function onBootstrap($e)
+    public function onBootstrap(MvcEvent $e)
     {
         $eventManager = $e->getApplication()->getEventManager();
         $moduleRouteListener = new ModuleRouteListener();
         $moduleRouteListener->attach($eventManager);
         $this->bootstrapSession($e);
+        $eventManager->attach('route', array($this, 'loadAclConfiguration'), 2);
     }
 
-    public function bootstrapSession($e)
+    public function loadAclConfiguration(MvcEvent $e)
+    {
+        $application = $e->getApplication();
+        $sm = $application->getServiceManager();
+        $sharedManager = $application->getEventManager()->getSharedManager();
+
+        $router = $sm->get('router');
+        $request = $sm->get('request');
+
+        $matchedRoute = $router->match($request);
+        if (null !== $matchedRoute) {
+            $sharedManager->attach('Zend\Mvc\Controller\AbstractActionController', 'dispatch',
+                function ($e) use ($sm) {
+                    $sm->get('ControllerPluginManager')->get('acl')
+                        ->doAuthorization($e);
+                }, 2
+            );
+        }
+    }
+
+    public function bootstrapSession(MvcEvent $e)
     {
         $session = $e->getApplication()
             ->getServiceManager()
@@ -73,55 +95,5 @@ class Module
                 }
             }
         }
-    }
-
-    public function getServiceConfig()
-    {
-        return array(
-            'factories' => array(
-                'Zend\Authentication\AuthenticationService' => function ($serviceManager) {
-                    return $serviceManager->get('doctrine.authenticationservice.orm_default');
-                },
-                'User\Form\RegistrationForm' => function ($sm) {
-                    return new \User\Form\RegistrationForm(
-                        new \User\Form\RegistrationFilter(
-                            $sm->get('doctrine.entitymanager.orm_default')
-                        )
-                    );
-                },
-                'Zend\Session\SessionManager' => function ($sm) {
-                    $config = $sm->get('config');
-                    if (isset($config['session'])) {
-                        $session = $config['session'];
-
-                        $sessionConfig = null;
-                        if (isset($session['config'])) {
-                            $class = isset($session['config']['class']) ? $session['config']['class'] : 'Zend\Session\Config\SessionConfig';
-                            $options = isset($session['config']['options']) ? $session['config']['options'] : array();
-                            $sessionConfig = new $class();
-                            $sessionConfig->setOptions($options);
-                        }
-
-                        $sessionStorage = null;
-                        if (isset($session['storage'])) {
-                            $class = $session['storage'];
-                            $sessionStorage = new $class();
-                        }
-
-                        $sessionSaveHandler = null;
-                        if (isset($session['save_handler'])) {
-                            // class should be fetched from service manager since it will require constructor arguments
-                            $sessionSaveHandler = $sm->get($session['save_handler']);
-                        }
-
-                        $sessionManager = new SessionManager($sessionConfig, $sessionStorage, $sessionSaveHandler);
-                    } else {
-                        $sessionManager = new SessionManager();
-                    }
-                    Container::setDefaultManager($sessionManager);
-                    return $sessionManager;
-                },
-            ),
-        );
     }
 }
