@@ -14,10 +14,12 @@
     <?php echo $this->headLink(array('rel' => 'shortcut icon', 'type' => 'image/vnd.microsoft.icon', 'href' => $this->basePath() . '/img/favicon.ico'))
         ->prependStylesheet($this->basePath() . '/css/style.css')
         ->prependStylesheet($this->basePath() . '/css/bootstrap-theme.min.css')
+        ->prependStylesheet($this->basePath() . '/css/animate/animate.min.css')
         ->prependStylesheet($this->basePath() . '/css/bootstrap.css') ?>
 
     <!-- Scripts -->
     <?php echo $this->headScript()
+        ->prependFile($this->basePath() . '/js/bootstrap-notify/bootstrap-notify.min.js')
         ->prependFile($this->basePath() . '/js/bootstrap.min.js')
         ->prependFile($this->basePath() . '/js/jquery.min.js')
         ->prependFile($this->basePath() . '/js/respond.min.js', 'text/javascript', array('conditional' => 'lt IE 9',))
@@ -54,7 +56,7 @@
                 </form>
                 <ul class="nav navbar-nav navbar-right">
                     <?php if ($user = $this->identity()) { ?>
-                        <li><a style="margin-top: -11px" href="<?php echo $this->url('registration'); ?>">Ваши<br>объявления</a>
+                        <li><a style="margin-top: -11px" href="<?php echo $this->url('getUserAds'); ?>">Ваши<br>объявления</a>
                         </li>
                         <li><a href="<?php echo $this->url('logout'); ?>">Выход</a></li>
                     <?php } else { ?>
@@ -73,7 +75,23 @@
         <p>&copy; <?php echo date('Y') ?> by MaxTech</p>
     </footer>
 </div>
-<!-- /container -->
-<?php echo $this->inlineScript() ?>
+
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default modal-no" data-dismiss="modal">Нет</button>
+                <button type="button" class="btn btn-primary modal-yes">Да</button>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
