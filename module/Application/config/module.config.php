@@ -15,13 +15,14 @@ return array(
                 'options' => array(
                     'route' => '/',
                     'defaults' => array(
-                        'controller' => 'Application\Controller\Index',
-                        'action' => 'index',
+                        'controller' => 'Ads\Controller\Ads',
+                        'action' => 'mainCategories',
                     ),
                 ),
             ),
         ),
     ),
+
     'service_manager' => array(
         'abstract_factories' => array(
             'Zend\Cache\Service\StorageCacheAbstractServiceFactory',
@@ -33,17 +34,7 @@ return array(
             'Application\Service\NestedSetCategories' => 'Application\Service\NestedSetCategoriesFactory'
         ),
     ),
-    'controllers' => array(
-        'invokables' => array(
-            'Application\Controller\Index' => 'Application\Controller\IndexController'
-        ),
-    ),
-    'controller_plugins' => array(
-        'invokables' => array(
-            'em' => 'Application\ControllerPlugin\EntityManagerPlugin',
-            'nsm' => 'Application\ControllerPlugin\NestedSetPlugin',
-        )
-    ),
+
     'view_manager' => array(
         'display_not_found_reason' => true,
         'display_exceptions' => true,
@@ -60,6 +51,7 @@ return array(
             __DIR__ . '/../view',
         ),
     ),
+
     'doctrine' => array(
         'driver' => array(
             'property_entities' => array(
@@ -92,6 +84,7 @@ return array(
             ),
         ),
     ),
+
     // Placeholder for console routes
     'console' => array(
         'router' => array(
