@@ -38,10 +38,11 @@ class AdsRepository extends EntityRepository
 
         if (!empty($categoriesId)) {
             $query = $this->_em
-                ->createQuery("Select a,cur,r,city from Application\Entity\Ads a
+                ->createQuery("Select a,cur,r,city,u from Application\Entity\Ads a
                                           LEFT JOIN a.currencyid cur
                                           LEFT JOIN a.regionid r
                                           LEFT JOIN a.cityid city
+                                          LEFT JOIN a.userid u
                                           WHERE a.categoryid IN (:catsId) ORDER BY a.created DESC")
                 ->setParameters(array(
                     'catsId' => $categoriesId,
@@ -54,15 +55,48 @@ class AdsRepository extends EntityRepository
         return $query;
     }
 
+    public function getAdsByUserId($userId, $page, $limit = 10)
+    {
+        $offset = ($page == 0) ? 0 : ($page - 1) * $limit;
+
+        $query = $this->_em
+            ->createQuery("Select a,cur,r,city,u from Application\Entity\Ads a
+                                          LEFT JOIN a.currencyid cur
+                                          LEFT JOIN a.regionid r
+                                          LEFT JOIN a.cityid city
+                                          LEFT JOIN a.userid u
+                                          WHERE a.userid=:userId ORDER BY a.created DESC")
+            ->setParameters(array(
+                'userId' => $userId,
+            ))
+            ->setMaxResults($limit)
+            ->setFirstResult($offset);
+
+        return $query;
+    }
+
+    public function countAdsByUserId($userId)
+    {
+        $query = $this->_em
+            ->createQuery("SELECT COUNT(e.id) FROM Application\Entity\Ads e
+                                              WHERE e.userid=:userId")
+            ->setParameters(array(
+                'userId' => $userId
+            ));
+
+        return $query;
+    }
+
     public function getAdsAll($page, $limit = 10)
     {
         $offset = ($page == 0) ? 0 : ($page - 1) * $limit;
 
         $query = $this->_em
-            ->createQuery("Select a,cur,r,city from Application\Entity\Ads a
+            ->createQuery("Select a,cur,r,city,u from Application\Entity\Ads a
                                           LEFT JOIN a.currencyid cur
                                           LEFT JOIN a.regionid r
-                                          LEFT JOIN a.cityid city ORDER BY a.created DESC")
+                                          LEFT JOIN a.cityid city
+                                          LEFT JOIN a.userid u ORDER BY a.created DESC")
             ->setMaxResults($limit)
             ->setFirstResult($offset);
 

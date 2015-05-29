@@ -113,7 +113,13 @@ class Ads
      */
     private $userid;
 
-
+    /**
+     * @PrePersist
+     */
+    public function prePersist()
+    {
+        $this->created = new \DateTime();
+    }
 
     /**
      * Get id
