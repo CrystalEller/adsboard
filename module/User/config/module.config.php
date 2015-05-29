@@ -67,6 +67,22 @@ return array(
         )
     ),
 
+    'controller_plugins' => array(
+        'factories' => array(
+            'acl' => 'User\Controller\Plugin\Factory\AclControllerPluginFactory',
+        )
+    ),
+
+    'service_manager' => array(
+        'factories' => array(
+            'Zend\Session\SessionManager' => 'User\Factory\SessionManagerFactory',
+            'User\Form\RegistrationForm' => 'User\Factory\RegistrationFormFactory',
+            'Zend\Authentication\AuthenticationService' => function ($serviceManager) {
+                return $serviceManager->get('doctrine.authenticationservice.orm_default');
+            },
+        )
+    ),
+
     'session' => array(
         'config' => array(
             'class' => 'Zend\Session\Config\SessionConfig',
