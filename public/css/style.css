@@ -107,10 +107,19 @@ div.container a.brand {
     margin-bottom: 25px;
 }
 
+.margin-top25 {
+    margin-top: 35px;
+}
+
 .ads-description {
     overflow-wrap: break-word;
 }
 
 .border-bottom {
     border-bottom: 1px solid #eee;
+}
+
+.modal-backdrop {
+    bottom: 0;
+    position: fixed;
 }
