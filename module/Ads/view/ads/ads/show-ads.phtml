@@ -19,8 +19,12 @@
     <div class="col-lg-4">
         <div>
             <h2>
-                <?= $ads->getPrice() ?>
-                <?= $ads->getCurrencyid()->getName() ?>
+                <?php if (!empty($ads->getPrice())): ?>
+                    <?= $this->escapeHtml($ads->getPrice()) ?>
+                    <?= $ads->getCurrencyid()->getName() ?>
+                <?php else: ?>
+                    Договорная
+                <?php endif; ?>
             </h2>
         </div>
         <div class="margin-bottom40">
@@ -33,10 +37,10 @@
                 </h5>
             </div>
             <h3 class="border-bottom">
-                <?= $ads->getUserName() ?>
+                <?= $this->escapeHtml($ads->getUserName()) ?>
             </h3>
             <h4>
-                Телефон: +38<?= $ads->getTelephone() ?>
+                Телефон: +38<?= $this->escapeHtml($ads->getTelephone()) ?>
             </h4>
         </div>
         <div>
@@ -65,7 +69,7 @@
             </ul>
         </div>
         <div class="ads-description">
-            <?= $ads->getDescription() ?>
+            <?= nl2br($this->escapeHtml($ads->getDescription())) ?>
         </div>
     </div>
 </div>

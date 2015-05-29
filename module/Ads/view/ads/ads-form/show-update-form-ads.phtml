@@ -1,0 +1,239 @@
+<?php $this->headScript()
+    ->appendFile($this->basePath() . '/js/form-builder/form-field.js')
+    ->appendFile($this->basePath() . '/js/jquery-img-upload.js')
+    ->appendFile($this->basePath() . '/js/jquery.form.js') ?>
+<?php echo $this->headLink()
+    ->prependStylesheet($this->basePath() . '/css/jquery-img-upload.css') ?>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="page-header">
+            <h3>Обновить объявление</h3>
+        </div>
+    </div>
+
+    <div class="row">
+        <form id="ads-update"
+              action="<?= $this->url('updateUserAds/getUpdateAdsForm', array('adsId' => $this->ads['id'])) ?>"
+              class="form-horizontal" method="post"
+              enctype="multipart/form-data">
+            <div class="row">
+                <div class="col-lg-6 col-lg-push-3">
+                    <div class="form-group required">
+                        <label class="control-label">Имя</label>
+                        <input type="text" class="form-control" name="userName" placeholder="Ввведите имя"
+                               value="<?= $this->escapeHtml($this->ads['username']) ?>">
+                        <span class="help-block"></span>
+                    </div>
+                    <div class="form-group required">
+                        <label class="control-label">Телефон</label>
+
+                        <div class="input-group">
+                            <span class="input-group-addon" id="basic-addon1">+38</span>
+                            <input type="text" class="form-control" name="telephone" placeholder="Ввведите телефон"
+                                   value="<?= $this->escapeHtml($this->ads['telephone']) ?>">
+                        </div>
+                        <span class="help-block"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-6 col-lg-push-3">
+                    <div class="form-group required">
+                        <label class="control-label">Заголовок</label>
+                        <input type="text" class="form-control" name="title" placeholder="Ввведите заголовок"
+                               value="<?= $this->escapeHtml($this->ads['title']) ?>">
+                        <span class="help-block"></span>
+                    </div>
+                    <div class="form-group required">
+                        <label class="control-label">Описание</label>
+                    <textarea rows="10" cols="20" class="form-control" name="description"
+                              placeholder="Описание товара"><?= $this->escapeHtml($this->ads['description']) ?></textarea>
+                        <span class="help-block"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">Цена</label>
+
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="input-group">
+                                    <input type="number" class="form-control" name="price"
+                                           value="<?= $this->escapeHtmlAttr($this->ads['price']) ?>"
+                                           placeholder="Ввведите цену">
+                                <span class="input-group-btn">
+                                    <select class="btn btn-default selectpicker" name="currency">
+                                        <?php foreach ($this->currencies as $currency): ?>
+                                            <option value="<?= $currency['id'] ?>"><?= $currency['name'] ?></option>
+                                        <?php endforeach ?>
+                                    </select>
+                                </span>
+                                </div>
+                            </div>
+                            <div class="col-lg-3">
+                                <div class="checkbox">
+                                    <label>
+                                        <input id="no-price" type="checkbox" name="no-price" value="no-price">
+                                        Договорная
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="help-block"></span>
+                    </div>
+                </div>
+            </div>
+            <?php
+            $files = array();
+            foreach (glob("./public/img/ads_imgs/{$this->ads['id']}_*") as $filename) {
+                $imgSize = getimagesize($filename);
+                $file['name'] = basename($filename);
+                $file['size'] = filesize($filename);
+                $file['file'] = "/img/ads_imgs/" . basename($filename);
+                $file['type'] = $imgSize['mime'];
+                $files[] = $file;
+            }
+            $files = json_encode($files);
+            ?>
+            <div class="row">
+                <div class="col-lg-6 col-lg-push-3">
+                    <div class="form-group jFilter">
+                        <label class="control-label">Фото</label>
+                        <input id="deleteImgs" name="deleteImgs" type="hidden" value="">
+                        <a class="btn btn-default file_input" data-jfiler-name="files"
+                           data-files='<?= $files ?>'
+                           data-jfiler-extensions="jpg, jpeg, png"><i class="icon-jfi-paperclip"></i> Выбрать
+                            изображение</a>
+                        <span class="help-block"></span>
+                    </div>
+                    <div class="form-group text-right">
+                        <button type="submit" class="btn btn-default">Обновить</button>
+                        <a class="btn btn-default" href="<?= $this->url('getUserAds') ?>">Отмена</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $('#no-price').click(function () {
+        if (this.checked) {
+            $('[name=price]').prop('disabled', true);
+        } else {
+            $('[name=price]').prop('disabled', false);
+        }
+    });
+
+    $('#ads-update').submit(function () {
+        var target = $(this);
+
+        target.ajaxSubmit({
+            success: function (data) {
+                $('.help-block')
+                    .html('')
+                    .closest('div')
+                    .removeClass('has-error')
+                    .addClass('has-success');
+
+                if (data.success) {
+                    window.location.href = data.redirect;
+                } else {
+                    $.each(data.formErrors, function (name, value) {
+                        var $elem = $('[name^="' + name + '"]');
+
+                        if ($.isPlainObject(value)) {
+                            var first;
+                            for (first in value) break;
+                            value = value[first];
+                        }
+
+                        $elem.closest('div.form-group')
+                            .addClass('has-error')
+                            .removeClass('has-success')
+                            .find('span.help-block')
+                            .html(value + '\n');
+                    });
+                }
+            },
+            error: function (XMLHttpRequest) {
+                alert(XMLHttpRequest.status + ': ' + XMLHttpRequest.responseText);
+            }
+        });
+
+        return false;
+    });
+
+    $('.file_input').filer({
+        showThumbs: true,
+        limit: 9,
+        maxSize: 45,
+        templates: {
+            box: '<ul class="jFiler-item-list"></ul>',
+            item: '<li class="jFiler-item">\
+                            <div class="jFiler-item-container">\
+                                <div class="jFiler-item-inner">\
+                                    <div class="jFiler-item-thumb">\
+                                        <div class="jFiler-item-status"></div>\
+                                        <div class="jFiler-item-info">\
+                                            <span class="jFiler-item-title"><b title="{{fi-name}}">{{fi-name | limitTo: 25}}</b></span>\
+                                        </div>\
+                                        {{fi-image}}\
+                                    </div>\
+                                    <div class="jFiler-item-assets jFiler-row">\
+                                        <ul class="list-inline pull-left">\
+                                            <li><span class="jFiler-item-others">{{fi-icon}} {{fi-size2}}</span></li>\
+                                        </ul>\
+                                        <ul class="list-inline pull-right">\
+                                            <li><a class="icon-jfi-trash jFiler-item-trash-action"></a></li>\
+                                        </ul>\
+                                    </div>\
+                                </div>\
+                            </div>\
+                        </li>',
+            itemAppend: '<li class="jFiler-item">\
+                            <div class="jFiler-item-container">\
+                                <div class="jFiler-item-inner">\
+                                    <div class="jFiler-item-thumb">\
+                                        <div class="jFiler-item-status"></div>\
+                                        <div class="jFiler-item-info">\
+                                            <span class="jFiler-item-title"><b title="{{fi-name}}">{{fi-name | limitTo: 25}}</b></span>\
+                                        </div>\
+                                        {{fi-image}}\
+                                    </div>\
+                                    <div class="jFiler-item-assets jFiler-row">\
+                                        <ul class="list-inline pull-left">\
+                                            <span class="jFiler-item-others">{{fi-icon}} {{fi-size2}}</span>\
+                                        </ul>\
+                                        <ul class="list-inline pull-right">\
+                                            <li><a class="icon-jfi-trash jFiler-item-trash-action"></a></li>\
+                                        </ul>\
+                                    </div>\
+                                </div>\
+                            </div>\
+                        </li>',
+            progressBar: '<div class="bar"></div>',
+            itemAppendToEnd: true,
+            removeConfirmation: true,
+            _selectors: {
+                list: '.jFiler-item-list',
+                item: '.jFiler-item',
+                progressBar: '.bar',
+                remove: '.jFiler-item-trash-action'
+            }
+        },
+        addMore: true,
+        onRemove: function (el, file) {
+            var val = $('#deleteImgs').val();
+            if (val) {
+                var parsed = JSON.parse(val);
+            } else {
+                val = [];
+            }
+            val.push(file.name);
+
+            $('#deleteImgs').val(JSON.stringify(val));
+        },
+        files: $('.jFilter .file_input').data('files')
+    });
+
+</script>
