@@ -15,118 +15,6 @@ class AdsController extends AbstractActionController
     protected $em;
     protected $nsc;
 
-    public function showFormAdsAction()
-    {
-        $em = $this->getEntityManager();
-
-        $cats = $em->getRepository('Application\Entity\Categories')
-            ->getRootCategories()
-            ->getResult(Query::HYDRATE_ARRAY);
-
-        $regions = $em->getRepository('Application\Entity\Region')
-            ->getAll()
-            ->getResult(Query::HYDRATE_ARRAY);
-
-        $currencies = $em->getRepository('Application\Entity\Currency')
-            ->getAll()
-            ->getResult(Query::HYDRATE_ARRAY);
-
-        return new ViewModel(array(
-            'cats' => $cats,
-            'regions' => $regions,
-            'currencies' => $currencies
-        ));
-
-    }
-
-    public function createAction()
-    {
-        $request = $this->getRequest();
-
-        if ($request->isPost()) {
-            $messages = array();
-            $filter = $this->getServiceLocator()->get('Ads\Filter\AdsFilter');
-            $filterPrice = $this->getServiceLocator()->get('Ads\Filter\PriceFilter');
-            $validator = $this->getServiceLocator()
-                ->get('ValidatorManager')
-                ->get('FormBuilder');
-            $props = $request->getPost('prop');
-            $values = $request->getPost()->toArray();
-            $files = $request->getFiles()->toArray();
-
-
-            if (empty($files['files'][0])) {
-                unset($values['files']);
-                $files = array();
-            }
-
-            $data = array_merge($values, $files);
-
-            $filter->setData($data);
-            $filterPrice->setData($data);
-
-            if ($request->getPost('no-price') !== 'no-price') {
-                $filterPrice->setValidationGroup(array('price', 'currency'));
-            } else {
-                $filterPrice->setValidationGroup('no-price');
-            }
-
-            if (!$filter->isValid() |
-                !$validator->isValid($props) |
-                !$filterPrice->isValid()
-            ) {
-                $messages = array_merge(
-                    $filter->getMessages(),
-                    $validator->getMessages(),
-                    $filterPrice->getMessages()
-                );
-            }
-
-            if (sizeof($messages) > 0) {
-                return new JsonModel(array(
-                    'success' => false,
-                    'formErrors' => $messages
-                ));
-            } else {
-                $em = $this->getEntityManager();
-                $hydrator = $this->getServiceLocator()->get('Application\Hydrator\Doctrine');
-                $ads = new Ads();
-
-                $data = array(
-                    'title' => $request->getPost('title'),
-                    'description' => $request->getPost('description'),
-                    'userid' => $this->identity()->getId(),
-                    'categoryid' => end(array_values($request->getPost('category'))),
-                    'cityid' => $request->getPost('city'),
-                    'regionid' => $request->getPost('region'),
-                    'userName' => $request->getPost('userName'),
-                    'telephone' => $request->getPost('telephone')
-                );
-
-                if ($request->getPost('no-price') !== 'no-price') {
-                    $data['price'] = $request->getPost('price');
-                    $data['currencyid'] = $request->getPost('currency');
-                }
-
-                $ads = $hydrator->hydrate($data, $ads);
-
-                $em->persist($ads);
-                $em->flush();
-
-                $em->getRepository('Application\Entity\AdsValues')
-                    ->saveValues($props, $ads);
-
-                $this->move_uploaded_imgs($files, $ads->getId());
-
-                return new JsonModel(array(
-                    'success' => true,
-                    'redirect' => $this->url()->fromRoute('home')
-                ));
-            }
-
-        }
-    }
-
     public function showAdsAction()
     {
         $adsId = $this->params('adsId', 0);
@@ -148,51 +36,6 @@ class AdsController extends AbstractActionController
             'ads' => $ads,
             'props' => $propsGroups
         ));
-    }
-
-    public function getCitiesAction()
-    {
-        $request = $this->getRequest();
-
-        if ($request->isPost()) {
-            $cities = $this->em()
-                ->getRepository('Application\Entity\City')
-                ->getCityByRegionId($request->getPost('regionid'))
-                ->getResult(Query::HYDRATE_ARRAY);
-
-            return new JsonModel(array(
-                'cities' => $cities
-            ));
-        }
-    }
-
-    public function getCategoriesAction()
-    {
-        $request = $this->getRequest();
-
-        if ($request->isPost()) {
-            $pid = $request->getPost('pid');
-
-            $category = $this->em()
-                ->find('Application\Entity\Categories', $pid);
-
-            $cats = $this->nsm('Application\Entity\Categories')
-                ->wrapNode($category)->getChildren();
-
-            $data = array();
-            $size = sizeof($cats);
-
-            for ($i = 0; $i < $size; $i++) {
-                $node = $cats[$i]->getNode();
-                $data[$i]['id'] = $node->getId();
-                $data[$i]['name'] = $node->getName();
-                $data[$i]['level'] = $node->getLevel();
-            }
-
-            return new JsonModel(array(
-                'cats' => $data
-            ));
-        }
     }
 
     public function mainCategoriesAction()
@@ -284,10 +127,6 @@ class AdsController extends AbstractActionController
                     'data' => !empty($cats) ? $catsData : $attributes
                 )
             ));
-        } else {
-            $viewModel = new ViewModel();
-            $viewModel->setTemplate('error/404');
-            return $viewModel;
         }
     }
 
@@ -322,18 +161,6 @@ class AdsController extends AbstractActionController
             ));
 
         return $view;
-    }
-
-
-    private function move_uploaded_imgs($files, $adsId)
-    {
-        if (!empty($files['files'])) {
-            $uploadDir = './public/img/ads_imgs/';
-            foreach ($files['files'] as $file) {
-                $newFileName = $uploadDir . $adsId . '_' . $file['name'];
-                move_uploaded_file($file['tmp_name'], $newFileName);
-            }
-        }
     }
 
     public function setEntityManager(EntityManager $em)
