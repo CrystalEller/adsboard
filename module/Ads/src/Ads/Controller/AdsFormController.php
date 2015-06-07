@@ -81,6 +81,40 @@ class AdsFormController extends AbstractActionController
         }
     }
 
+    public function getRegionsAction()
+    {
+        $regions = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('r')
+            ->from('Application\Entity\Region', 'r')
+            ->getQuery()
+            ->getResult(Query::HYDRATE_ARRAY);
+
+        return new JsonModel(array(
+            'regions' => $regions
+        ));
+    }
+
+    public function getRootCategoriesAction()
+    {
+        $em = $this->getEntityManager();
+
+        $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('c.name, c.id')
+            ->from('Application\Entity\Categories', 'c')
+            ->getQuery()
+            ->getResult(Query::HYDRATE_ARRAY);
+
+        $cats = $em->getRepository('Application\Entity\Categories')
+            ->getRootCategories()
+            ->getResult(Query::HYDRATE_ARRAY);
+
+        return new JsonModel(array(
+            'rootCats' => $cats
+        ));
+    }
+
     public function getCategoriesAction()
     {
         $request = $this->getRequest();
