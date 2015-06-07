@@ -1,0 +1,8 @@
+.dropdown-submenu .dropdown-menu {
+    height: 500px;
+    overflow-y: scroll;
+}
+
+.dropdown li {
+    cursor: pointer;
+}
