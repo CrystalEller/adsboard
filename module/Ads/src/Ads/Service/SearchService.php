@@ -4,17 +4,20 @@ namespace Ads\Service;
 
 
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr;
 
 class SearchService
 {
 
     private $qb;
+    private $elastic;
     private $args = array();
     private $ids = array();
 
-    public function __construct(EntityManager $em)
+    public function __construct(EntityManager $em, ElasticSearchService $elastic)
     {
+        $this->elastic = $elastic;
         $this->qb = $em->createQueryBuilder();
         $this->qb->select('ads, adsCur')
             ->from('Application\Entity\Ads', 'ads');
@@ -24,16 +27,23 @@ class SearchService
     {
         $offset = ($page == 0) ? 0 : ($page - 1) * $limit;
 
-        $args = $this->getArgs();
+        $args = $this->getArgs($page, $limit);
 
         $query = $this->qb
-            ->leftJoin('ads.currencyid', 'adsCur')
-            ->add('where', new Expr\Andx($args))
+            ->leftJoin('ads.currencyid', 'adsCur');
+
+        if (!empty($args)) {
+            $query = $query
+                ->add('where', new Expr\Andx($args));
+        }
+
+        $query = $query
             ->setMaxResults($limit)
             ->setFirstResult($offset)
             ->getQuery();
 
-        return $query->getArrayResult();
+
+        return $query->getResult(Query::HYDRATE_ARRAY);
     }
 
     public function countAds()
@@ -43,9 +53,14 @@ class SearchService
         $query = $this->qb
             ->resetDQLParts(array('select', 'from'))
             ->select('count(ads.id)')
-            ->from('Application\Entity\Ads', 'ads')
-            ->add('where', new Expr\Andx($args))
-            ->getQuery();
+            ->from('Application\Entity\Ads', 'ads');
+
+        if (!empty($args)) {
+            $query = $query
+                ->add('where', new Expr\Andx($args));
+        }
+
+        $query = $query->getQuery();
 
         return $query->getSingleScalarResult();
     }
@@ -60,10 +75,10 @@ class SearchService
                 if (method_exists($this, $method)) {
                     if (is_array($val)) {
                         $val = array_map(function ($value) {
-                            return is_numeric($value) ? intval($value) : 0;
+                            return is_numeric($value) ? intval($value) : $value;
                         }, $val);
                     } else {
-                        $val = is_numeric($val) ? intval($val) : 0;
+                        $val = is_numeric($val) ? intval($val) : $val;
                     }
                     $this->$method($val);
                 }
@@ -96,6 +111,11 @@ class SearchService
         $this->ids['categoryId'] = $categoryIds;
     }
 
+    public function setQuery($query)
+    {
+        $this->ids['query'] = $query;
+    }
+
     private function getArgs()
     {
         foreach ($this->ids as $key => $val) {
@@ -112,6 +132,12 @@ class SearchService
                         break;
                     case 'categoryId':
                         $this->args[] = $this->qb->expr()->in('ads.categoryid', $val);
+                        break;
+                    case 'query':
+                        $adsIds = $this->elastic->searchAds($this->ids);
+                        if (!empty($adsIds)) {
+                            $this->args[] = $this->qb->expr()->in('ads.id', $adsIds);
+                        }
                         break;
                 }
             }
