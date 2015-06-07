@@ -105,6 +105,12 @@ class AdsUpdateFilter extends InputFilter implements InputFilterInterface
                         'max' => '5MB',
                         'min' => '10kB'
                     )
+                ),
+                array(
+                    'name' => 'Ads\Validator\FilesCountValidator',
+                    'options' => array(
+                        'max' => '9'
+                    )
                 )
             )
         ));
