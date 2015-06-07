@@ -32,7 +32,8 @@ return array(
             'guest' => array(
                 'Ads\Controller\Ads' => null,
                 'User\Controller\User' => null,
-                'User\Controller\Captcha' => null
+                'User\Controller\Captcha' => null,
+                'Ads\Controller\AdsForm' => array('getCities', 'getRegions', 'getCategories', 'getRootCategories'),
             )
         )
     )
