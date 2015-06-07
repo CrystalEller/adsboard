@@ -5,6 +5,7 @@ namespace Ads\Controller;
 use Doctrine\ORM\EntityManager;
 use Zend\Mvc\Controller\AbstractActionController;
 use Doctrine\ORM\Query;
+use Zend\Mvc\MvcEvent;
 use Zend\View\Model\ViewModel;
 use Zend\View\Model\JsonModel;
 use Application\Entity\Ads;
@@ -14,6 +15,45 @@ class AdsController extends AbstractActionController
 {
     protected $em;
     protected $nsc;
+
+    public function onDispatch(MvcEvent $e)
+    {
+        $this->initLayout();
+        return parent::onDispatch($e);
+    }
+
+    public function initLayout()
+    {
+        $em = $this->getEntityManager();
+        $request = $this->getRequest();
+        $data = $request->getQuery()->toArray();
+
+        if (!empty($data['regionId'])) {
+            $this->layout()->setVariable(
+                'region',
+                $em->find('Application\Entity\Region', $data['regionId'])
+            );
+        } elseif (!empty($data['cityId'])) {
+            $this->layout()->setVariable(
+                'city',
+                $em->find('Application\Entity\City', $data['cityId'])
+            );
+        }
+
+        if (!empty($data['categoryId'])) {
+            $this->layout()->setVariable(
+                'category',
+                $em->find('Application\Entity\Categories', $data['categoryId'])
+            );
+        }
+
+        if (!empty($data['query'])) {
+            $this->layout()->setVariable(
+                'query',
+                $data['query']
+            );
+        }
+    }
 
     public function showAdsAction()
     {
@@ -62,10 +102,7 @@ class AdsController extends AbstractActionController
             'page' => $page,
             'numberAds' => $number,
             'limit' => $limit,
-            'adsMenu' => array(
-                'type' => 'category',
-                'data' => $categories
-            )
+            'categories' => $categories
         ));
     }
 
@@ -98,14 +135,9 @@ class AdsController extends AbstractActionController
                     );
                 }
             } else {
-                $catsData[] = array(
-                    'id' => $category->getId(),
-                    'name' => $category->getName()
-                );
-
-                $attributes = $em->getRepository('Application\Entity\CategoryAttributesValues')
-                    ->getValuesByCategoryId($category->getId(), 'user')
-                    ->getResult(Query::HYDRATE_ARRAY);
+                return $this->redirect()->toRoute('adsByAttributes', array(
+                    'catId' => $catId
+                ));
             }
 
             $ads = $em->getRepository('Application\Entity\Ads')
@@ -122,45 +154,94 @@ class AdsController extends AbstractActionController
                 'limit' => $limit,
                 'category' => end($catsIds),
                 'page' => $page,
-                'adsMenu' => array(
-                    'type' => !empty($cats) ? 'category' : 'attribute',
-                    'data' => !empty($cats) ? $catsData : $attributes
-                )
+                'categories' => $catsData
+            ));
+        }
+    }
+
+    public function adsByAttributesAction()
+    {
+        $request = $this->getRequest();
+        $em = $this->getEntityManager();
+        $page = $request->getQuery('page', 0);
+        $catId = $this->params('catId', 0);
+        $limit = 10;
+
+        $category = $em->find('Application\Entity\Categories', $catId);
+
+        if (!empty($category)) {
+
+            $attributes = $em->getRepository('Application\Entity\CategoryAttributesValues')
+                ->getValuesByCategoryId($category->getId(), 'admin')
+                ->getResult(Query::HYDRATE_ARRAY);
+
+            $ads = $em->getRepository('Application\Entity\Ads')
+                ->getAdsByCategories($page, $category->getId(), $limit)
+                ->getResult(Query::HYDRATE_ARRAY);
+
+            $numberAds = $em->getRepository('Application\Entity\Ads')
+                ->countAdsByCategories($category->getId())
+                ->getSingleScalarResult();
+
+            return new ViewModel(array(
+                'ads' => $ads,
+                'numberAds' => $numberAds,
+                'limit' => $limit,
+                'category' => $category->getId(),
+                'page' => $page,
+                'attributes' => $attributes
             ));
         }
     }
 
     public function searchAction()
     {
-        $limit = 10;
         $request = $this->getRequest();
         $page = $request->getQuery('page', 0);
         $data = $request->getQuery()->toArray();
         $em = $this->getEntityManager();
+        $nsc = $this->getNestedSetCategories();
         $search = $this->getServiceLocator()->get('Ads\Service\Search');
-        $view = new ViewModel();
+        $viewModel = new ViewModel();
+        $limit = 10;
 
         $ads = $search->setData($data)->search($page, $limit);
         $number = $search->countAds();
 
-        $attrsVals = $em->getRepository('Application\Entity\CategoryAttributesValues')
-            ->getValuesByCategoryId($data['categoryid'], 'user')
-            ->getResult(Query::HYDRATE_ARRAY);
+        $viewModel->setVariables(array(
+            'ads' => $ads,
+            'numberAds' => $number,
+            'page' => $page,
+            'limit' => $limit,
+            'search' => $data
+        ));
 
-        $view->setTemplate('ads/ads/ads-by-category')
-            ->setVariables(array(
-                'ads' => $ads,
-                'numberAds' => $number,
-                'page' => $page,
-                'limit' => $limit,
-                'search' => $data,
-                'adsMenu' => array(
-                    'type' => 'attribute',
-                    'data' => $attrsVals
-                ),
-            ));
+        if (!empty($data['categoryId'])) {
+            $category = $em->find('Application\Entity\Categories', $data['categoryId']);
+            $cats = $nsc->wrapNode($category)->getChildren();
 
-        return $view;
+            if (!empty($cats)) {
+                $catsData = array();
+
+                foreach ($cats as $cat) {
+                    $cat = $cat->getNode();
+                    $catsData[] = array(
+                        'id' => $cat->getId(),
+                        'name' => $cat->getName()
+                    );
+                }
+
+                $viewModel->setVariable('categories', $catsData);
+            } else {
+                $attrsVals = $em->getRepository('Application\Entity\CategoryAttributesValues')
+                    ->getValuesByCategoryId($data['categoryId'], 'admin')
+                    ->getResult(Query::HYDRATE_ARRAY);
+
+                $viewModel->setVariable('attributes', $attrsVals);
+            }
+        }
+
+        return $viewModel;
     }
 
     public function setEntityManager(EntityManager $em)
