@@ -23,6 +23,26 @@ return array(
                     ),
                 ),
             ),
+            'getRegions' => array(
+                'type' => 'Zend\Mvc\Router\Http\Literal',
+                'options' => array(
+                    'route' => '/getRegions',
+                    'defaults' => array(
+                        'controller' => 'Ads\Controller\AdsForm',
+                        'action' => 'getRegions',
+                    ),
+                ),
+            ),
+            'getRootCategories' => array(
+                'type' => 'Zend\Mvc\Router\Http\Literal',
+                'options' => array(
+                    'route' => '/getRootCategories',
+                    'defaults' => array(
+                        'controller' => 'Ads\Controller\AdsForm',
+                        'action' => 'getRootCategories',
+                    ),
+                ),
+            ),
             'getCategories' => array(
                 'type' => 'Zend\Mvc\Router\Http\Literal',
                 'options' => array(
@@ -121,6 +141,19 @@ return array(
                     )
                 ),
             ),
+            'adsByAttributes' => array(
+                'type' => 'Zend\Mvc\Router\Http\Segment',
+                'options' => array(
+                    'route' => '/category/:catId/attributes',
+                    'constraints' => array(
+                        'catId' => '\d+'
+                    ),
+                    'defaults' => array(
+                        'controller' => 'Ads\Controller\Ads',
+                        'action' => 'adsByAttributes',
+                    )
+                ),
+            ),
             'showAds' => array(
                 'type' => 'Zend\Mvc\Router\Http\Segment',
                 'options' => array(
@@ -159,7 +192,8 @@ return array(
         'factories' => array(
             'Ads\Filter\AdsFilter' => 'Ads\Filter\Factory\AdsFilterFactory',
             'Ads\Filter\PriceFilter' => 'Ads\Filter\Factory\PriceFilterFactory',
-            'Ads\Service\Search' => 'Ads\Service\Factory\SearchServiceFactory'
+            'Ads\Service\Search' => 'Ads\Service\Factory\SearchServiceFactory',
+            'elastic-ads' => 'Ads\Service\Factory\ElasticSearchServiceFactory'
         ),
         'invokables' => array(
             'Ads\Filter\AdsUpdateFilter' => 'Ads\Filter\AdsUpdateFilter',
