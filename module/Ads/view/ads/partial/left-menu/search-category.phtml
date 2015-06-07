@@ -1,0 +1,24 @@
+<ul>
+    <?php $search = $this->search; ?>
+    <?php foreach ($this->categories as $cat): ?>
+        <li>
+            <h4>
+                <?php
+                $search['categoryId'] = $cat['id'];
+
+                $url = $this->url(
+                    'search',
+                    array(),
+                    array(
+                        'query' => $search
+                    )
+                );
+                ?>
+
+                <a href="<?= $url ?>">
+                    <?= $cat['name'] ?>
+                </a>
+            </h4>
+        </li>
+    <?php endforeach; ?>
+</ul>

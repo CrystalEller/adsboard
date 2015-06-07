@@ -6,7 +6,7 @@
                 <h3 class="panel-title">Категории Объявлений</h3>
             </div>
             <ul class="list-group">
-                <?php foreach ($this->adsMenu['data'] as $cat): ?>
+                <?php foreach ($this->categories as $cat): ?>
                     <li class="list-group-item">
                         <a href="<?= $this->url('adsByCategory', array('catId' => $cat['id'])) ?>">
                             <?= $this->escapeHtml($cat['name']) ?>

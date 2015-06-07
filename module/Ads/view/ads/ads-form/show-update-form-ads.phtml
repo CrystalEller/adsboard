@@ -136,7 +136,7 @@
                     .addClass('has-success');
 
                 if (data.success) {
-                    window.location.href = data.redirect;
+                    //window.location.href = data.redirect;
                 } else {
                     $.each(data.formErrors, function (name, value) {
                         var $elem = $('[name^="' + name + '"]');
@@ -225,7 +225,7 @@
         onRemove: function (el, file) {
             var val = $('#deleteImgs').val();
             if (val) {
-                var parsed = JSON.parse(val);
+                val = JSON.parse(val);
             } else {
                 val = [];
             }

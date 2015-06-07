@@ -161,7 +161,7 @@
                                 .text(value['name']))
                     });
                 },
-                fail: function (xhr) {
+                error: function (xhr) {
                     alert(xhr.status + ' ' + xhr.responseText)
                 }
             });

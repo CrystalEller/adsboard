@@ -1,0 +1,11 @@
+<ul>
+    <?php foreach ($this->categories as $cat): ?>
+        <li>
+            <h4>
+                <a href="<?= $this->url('adsByCategory', array('catId' => $cat['id'])) ?>">
+                    <?= $cat['name'] ?>
+                </a>
+            </h4>
+        </li>
+    <?php endforeach; ?>
+</ul>

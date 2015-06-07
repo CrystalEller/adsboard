@@ -1,0 +1,56 @@
+<?php echo $this->headScript()
+    ->prependFile($this->basePath() . '/js/checkbox-x.min.js') ?>
+<?php echo $this->headLink()
+    ->prependStylesheet($this->basePath() . '/css/checkbox-x.min.css') ?>
+
+<?php
+$names = array();
+
+if (!empty($this->search)) {
+    $url = $this->url(
+        'search',
+        array(),
+        array(
+            'query' => $this->search
+        )
+    );
+} else {
+    $url = $this->url(
+        'search',
+        array(),
+        array(
+            'query' => array(
+                'categoryId' => $this->category
+            )
+        )
+    );
+}
+?>
+<h4>Опции</h4>
+<?php foreach ($this->attributes as $attr): ?>
+    <?php if (!in_array($attr['name'], $names)): ?>
+        <h4><?= $attr['name'] ?>:</h4>
+        <?php $names[] = $attr['name']; ?>
+    <?php endif; ?>
+    <ul class="list-unstyled">
+        <li>
+            <div class="cbx-container">
+                <label class="cbx-label" style="font-size: large">
+                    <?php if (!empty($this->search['propId']) && (in_array($attr['id'], $this->search['propId']))): ?>
+                        <?php $hUrl = preg_replace("/&propId[^&]+={$attr['id']}/", '', $url, 1); ?>
+                        <?php $isSelected = true; ?>
+                    <?php else: ?>
+                        <?php $hUrl = $url . '&propId[]=' . $attr['id']; ?>
+                        <?php $isSelected = false; ?>
+                    <?php endif; ?>
+                    <a href="<?= $hUrl ?>">
+                        <input data-toggle="checkbox-x" value="<?= $isSelected ?>"
+                               data-three-state="false"><?= $attr['value'] ?>
+                    </a>
+                </label>
+            </div>
+        </li>
+    </ul>
+<?php endforeach; ?>
+
+<?= $this->partial('ads/partial/left-menu/search-location') ?>
