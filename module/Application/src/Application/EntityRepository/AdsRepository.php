@@ -32,7 +32,7 @@ class AdsRepository extends EntityRepository
         return $query;
     }
 
-    public function getAdsByCategories($page, array $categoriesId = null, $limit = 10)
+    public function getAdsByCategories($page, $categoriesId = null, $limit = 10)
     {
         $offset = ($page == 0) ? 0 : ($page - 1) * $limit;
 
@@ -45,7 +45,7 @@ class AdsRepository extends EntityRepository
                                           LEFT JOIN a.userid u
                                           WHERE a.categoryid IN (:catsId) ORDER BY a.created DESC")
                 ->setParameters(array(
-                    'catsId' => $categoriesId,
+                    'catsId' => (array)$categoriesId,
                 ))
                 ->setMaxResults($limit)
                 ->setFirstResult($offset);
