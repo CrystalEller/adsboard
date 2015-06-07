@@ -15,7 +15,11 @@
         ->prependStylesheet($this->basePath() . '/css/style.css')
         ->prependStylesheet($this->basePath() . '/css/bootstrap-theme.min.css')
         ->prependStylesheet($this->basePath() . '/css/animate/animate.min.css')
-        ->prependStylesheet($this->basePath() . '/css/bootstrap.css') ?>
+        ->prependStylesheet($this->basePath() . '/css/bootstrap.css')
+        ->prependStylesheet($this->basePath() . '/css/drop-down-submenu/drop-down-submenu.css')
+        ->prependStylesheet($this->basePath() . '/css/header/header.css')
+        ->prependStylesheet($this->basePath() . '/css/reset.min.css')
+    ?>
 
     <!-- Scripts -->
     <?php echo $this->headScript()
@@ -36,19 +40,68 @@
             </div>
 
             <div class="container collapse navbar-collapse">
-                <form class="navbar-form navbar-left" role="search">
+                <form class="navbar-form navbar-left" action="<?= $this->url('search') ?>" role="search">
                     <div class="form-group">
-                        <select class="form-control">
-                            <option selected disabled>Вся Украина</option>
-                        </select>
+                        <div class="dropdown">
+                            <?php if (!empty($this->region)): ?>
+                                <input id="location" type="hidden" name="regionId"
+                                       value="<?= $this->region->getId() ?>">
+                                <a id="selected-location" role="button" data-toggle="dropdown"
+                                   class="btn btn-default dropdown-toggle">
+                                    <span class="selected"><?= $this->region->getName() ?></span>
+                                    <span class="caret"></span>
+                                </a>
+                            <?php elseif (!empty($this->city)): ?>
+                                <input id="location" type="hidden" name="cityId" value="<?= $this->city->getId() ?>">
+                                <a id="selected-location" role="button" data-toggle="dropdown"
+                                   class="btn btn-default dropdown-toggle">
+                                    <span class="selected"><?= $this->city->getName() ?></span>
+                                    <span class="caret"></span>
+                                </a>
+                            <?php else: ?>
+                                <input id="location" type="hidden" name="" value="">
+                                <a id="selected-location" role="button" data-toggle="dropdown"
+                                   class="btn btn-default dropdown-toggle">
+                                    <span class="selected">Вся Украина </span>
+                                    <span class="caret"></span>
+                                </a>
+                            <?php endif; ?>
+                            <ul id="locationList" class="dropdown-menu multi-level" role="menu"
+                                aria-labelledby="dropdownMenu">
+                                <li><a href="#">Вся Украина</a></li>
+                            </ul>
+                        </div>
                     </div>
                     <div class="form-group">
-                        <input type="text" class="form-control" size="40" placeholder="Ввведите, то что ищите">
+                        <input type="text" name="query"
+                               class="form-control"
+                               size="40"
+                               placeholder="Ввведите, то что ищите"
+                               value="<?= !empty($this->query) ? $this->query : '' ?>">
                     </div>
                     <div class="form-group">
-                        <select class="form-control">
-                            <option selected disabled>Выбрать категорию</option>
-                        </select>
+                        <div class="dropdown">
+                            <?php if (!empty($this->category)): ?>
+                                <input id="categoryId" type="hidden" name="categoryId"
+                                       value="<?= $this->category->getId() ?>">
+                                <a id="selected-category" role="button" data-toggle="dropdown"
+                                   class="btn btn-default dropdown-toggle">
+                                    <span class="selected"><?= $this->category->getName() ?></span>
+                                    <span class="caret"></span>
+                                </a>
+                            <?php else: ?>
+                                <input id="categoryId" type="hidden" name="" value="">
+                                <a id="selected-category" role="button" data-toggle="dropdown"
+                                   class="btn btn-default dropdown-toggle">
+                                    <span class="selected">Все категории</span>
+                                    <span class="caret"></span>
+                                </a>
+                            <?php endif; ?>
+                            <ul id="categories" class="dropdown-menu multi-level" role="menu"
+                                aria-labelledby="dropdownMenu">
+                                <li><a href="#">Все категории</a></li>
+                            </ul>
+                        </div>
                     </div>
                     <div class="form-group">
                         <button type="submit" class="btn btn-default">Поиск</button>
@@ -56,7 +109,8 @@
                 </form>
                 <ul class="nav navbar-nav navbar-right">
                     <?php if ($user = $this->identity()) { ?>
-                        <li><a style="margin-top: -11px" href="<?php echo $this->url('getUserAds'); ?>">Ваши<br>объявления</a>
+                        <li><a style="margin-top: -11px" href="<?php echo $this->url('getUserAds'); ?>">Ваши
+                                объявления</a>
                         </li>
                         <li><a href="<?php echo $this->url('logout'); ?>">Выход</a></li>
                     <?php } else { ?>
@@ -93,5 +147,170 @@
         </div>
     </div>
 </div>
+
+<script>
+    $(document).ready(function () {
+
+        $('#locationList').on('click', 'a', function (e) {
+            var $target = $(this);
+            var $selectWrapper = $('#selected-location');
+            var input = $('#location');
+
+            if ($target.data('city-id')) {
+                input.attr('name', 'cityId');
+                input.val($target.data('city-id'));
+            } else {
+                if ($target.data('region-id')) {
+                    input.attr('name', 'regionId');
+                    input.val($target.data('region-id'));
+                } else {
+                    input.attr('name', '');
+                    input.val('');
+                }
+            }
+
+            $selectWrapper.find('.selected').text($target.text());
+        }).on('mouseenter', 'li', function (e) {
+            var target = $(this).find('>a'),
+                dropDown = target.prev();
+
+            if (dropDown.children().length == 0 &&
+                target.data('region-id')
+            ) {
+                $.ajax({
+                    type: 'POST',
+                    url: '/getCities',
+                    dataType: 'json',
+                    data: {regionid: target.data('region-id')},
+                    success: function (data) {
+                        var cities = data.cities;
+
+                        if (cities.length > 0) {
+                            dropDown.show();
+                        }
+
+                        $.each(cities, function (key, value) {
+                            var menuItem = $('<li>');
+
+                            dropDown.append(menuItem);
+                            menuItem.append(
+                                $('<a>')
+                                    .attr('href', '#')
+                                    .data('city-id', value.id)
+                                    .text(value.name)
+                            );
+
+                        });
+                    },
+                    error: function (XMLHttpRequest) {
+                        alert(XMLHttpRequest.status + ': ' + XMLHttpRequest.responseText);
+                    }
+                });
+            }
+        });
+
+        $('#categories').on('click', 'a', function (e) {
+            var $target = $(this);
+            var $selectWrapper = $('#selected-category');
+            var input = $('#categoryId');
+
+            if ($target.data('cat-id')) {
+                input.attr('name', 'categoryId');
+                input.val($target.data('cat-id'));
+            } else {
+                input.attr('name', '');
+                input.val('');
+            }
+
+
+            $selectWrapper.find('.selected').text($target.text());
+        }).on('mouseenter', 'li', function (e) {
+            var target = $(this).find('>a'),
+                dropDown = target.prev();
+
+            if (dropDown.children().length == 0 &&
+                target.data('cat-id')
+            ) {
+                $.ajax({
+                    type: 'POST',
+                    url: '/getCategories',
+                    dataType: 'json',
+                    data: {pid: target.data('cat-id')},
+                    success: function (data) {
+                        var cats = data.cats;
+
+                        if (cats.length > 0) {
+                            dropDown.show();
+                        }
+
+                        $.each(cats, function (key, value) {
+                            var menuItem = $('<li>');
+
+                            dropDown.append(menuItem);
+                            menuItem.append(
+                                $('<a>')
+                                    .attr('href', '#')
+                                    .data('cat-id', value.id)
+                                    .text(value.name)
+                            );
+
+                        });
+                    },
+                    error: function (XMLHttpRequest) {
+                        alert(XMLHttpRequest.status + ': ' + XMLHttpRequest.responseText);
+                    }
+                });
+            }
+        });
+
+        $.ajax({
+            url: '/getRegions',
+            dataType: 'json',
+            success: function (data) {
+                var regions = data.regions;
+
+                $.each(regions, function (key, value) {
+                    menuItemWrapper($('#locationList'), 'region-id', value.id, value.name);
+                });
+            },
+            error: function (XMLHttpRequest) {
+                alert(XMLHttpRequest.status + ': ' + XMLHttpRequest.responseText);
+            }
+        });
+
+        $.ajax({
+            url: '/getRootCategories',
+            dataType: 'json',
+            success: function (data) {
+                var cats = data.rootCats;
+
+                $.each(cats, function (key, value) {
+                    menuItemWrapper($('#categories'), 'cat-id', value.id, value.name);
+                });
+            },
+            error: function (XMLHttpRequest) {
+                alert(XMLHttpRequest.status + ': ' + XMLHttpRequest.responseText);
+            }
+        });
+
+        function menuItemWrapper(mainWrapper, dataKey, id, text) {
+            var subMenu = $('<li>').addClass('dropdown-submenu'),
+                dropDownMenu = $('<ul>').addClass('dropdown-menu');
+
+            mainWrapper.append(subMenu);
+            subMenu.append(dropDownMenu);
+            subMenu.append(
+                $('<a>')
+                    .attr('tabindex', '-1')
+                    .data(dataKey, id)
+                    .text(text)
+            );
+
+            dropDownMenu.hide();
+        }
+
+    });
+</script>
+
 </body>
 </html>
