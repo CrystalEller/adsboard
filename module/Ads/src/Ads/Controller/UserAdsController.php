@@ -14,6 +14,7 @@ use Zend\View\Model\ViewModel;
 class UserAdsController extends AbstractActionController
 {
     protected $em;
+    protected $elasticSearch;
 
     public function createAdsAction()
     {
@@ -65,6 +66,7 @@ class UserAdsController extends AbstractActionController
                 ));
             } else {
                 $em = $this->getEntityManager();
+                $elasticService = $this->getElasticSearchService();
                 $hydrator = $this->getServiceLocator()->get('Application\Hydrator\Doctrine');
                 $ads = new Ads();
 
@@ -92,7 +94,14 @@ class UserAdsController extends AbstractActionController
                 $em->getRepository('Application\Entity\AdsValues')
                     ->saveValues($props, $ads);
 
-                $this->move_uploaded_imgs($files, $ads->getId());
+
+                $elasticService->saveAds(
+                    $ads,
+                    array_values($request->getPost('category')),
+                    $props
+                );
+
+                $this->update_uploaded_imgs($files, $ads->getId());
 
                 return new JsonModel(array(
                     'success' => true,
@@ -109,6 +118,7 @@ class UserAdsController extends AbstractActionController
         if ($this->acl()->belongsToUser('ads', $adsId)) {
             $em = $this->getEntityManager();
             $ads = $em->find('Application\Entity\Ads', $adsId);
+            $elasticService = $this->getElasticSearchService();
 
             $values = $em->createQueryBuilder()
                 ->select('av, v')
@@ -126,6 +136,8 @@ class UserAdsController extends AbstractActionController
 
             $em->remove($ads);
             $em->flush();
+
+            $elasticService->deleteAds($ads);
 
             return new JsonModel(array(1));
         } else {
@@ -206,6 +218,7 @@ class UserAdsController extends AbstractActionController
                 ));
             } else {
                 $hydrator = $this->getServiceLocator()->get('Application\Hydrator\Doctrine');
+                $elasticService = $this->getElasticSearchService();
 
                 $ads = new Ads();
 
@@ -226,6 +239,8 @@ class UserAdsController extends AbstractActionController
 
                 $em->merge($ads);
                 $em->flush();
+
+                $elasticService->updateAds($ads);
 
                 $this->update_uploaded_imgs($files, $adsId, $deleteFiles);
 
@@ -252,14 +267,22 @@ class UserAdsController extends AbstractActionController
         return $this->em;
     }
 
-    private function update_uploaded_imgs($uploadFiles, $adsId, $deleteImgs)
+    public function getElasticSearchService()
+    {
+        if (!$this->elasticSearch) {
+            $this->elasticSearch = $this->getServiceLocator()->get('elastic-ads');
+        }
+        return $this->elasticSearch;
+    }
+
+    private function update_uploaded_imgs($uploadFiles, $adsId, $deleteImgs = null)
     {
         $uploadDir = './public/img/ads_imgs/';
         $thumbsDir = './public/img/ads_imgs/thumbs/';
 
-        $deleteImgs = json_decode($deleteImgs);
-
         if (!empty($deleteImgs)) {
+            $deleteImgs = json_decode($deleteImgs);
+
             foreach ($deleteImgs as $deleteImg) {
                 $thumbs = glob($thumbsDir . $adsId . "_*");
                 if (!empty($thumbs)) {
@@ -267,12 +290,16 @@ class UserAdsController extends AbstractActionController
 
                     foreach ($thumbs as $thumb) {
                         $partThumb = end(preg_split("#_#", basename($thumb)));
-                        if (strcasecmp($partImg, $partThumb) == 0) {
+                        if (strcasecmp($partImg, $partThumb) == 0 &&
+                            file_exists($thumb)
+                        ) {
                             unlink($thumb);
                         }
                     }
                 }
-                unlink($uploadDir . $deleteImg);
+                if (file_exists($uploadDir . $deleteImg)) {
+                    unlink($uploadDir . $deleteImg);
+                }
             }
         }
 
