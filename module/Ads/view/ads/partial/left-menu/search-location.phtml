@@ -11,7 +11,9 @@ $url = $this->url(
 <form action="<?= $this->url('search') ?>">
     <?php if (!empty($this->search)): ?>
         <?php foreach ($this->search as $key => $val): ?>
-            <input type="hidden" name="<?= $key ?>" value="<?= $val ?>">
+            <?php if ($key !== 'regionId' && $key !== 'cityId'): ?>
+                <input type="hidden" name="<?= $key ?>" value="<?= $val ?>">
+            <?php endif; ?>
         <?php endforeach; ?>
     <?php endif; ?>
     <div class="row margin-top55">
@@ -19,14 +21,22 @@ $url = $this->url(
             <div class="form-group">
                 <label class="control-label">Область</label>
                 <select id="region" name="regionId" class="form-control input-sm">
-                    <option value="" selected>Вся Украина</option>
+                    <?php if (!empty($this->search['regionId'])): ?>
+                        <option value="<?= $this->search['regionId'] ?>" selected>Вся Украина</option>
+                    <?php else: ?>
+                        <option value="" selected>Вся Украина</option>
+                    <?php endif; ?>
                 </select>
                 <span class="help-block"></span>
             </div>
             <div class="form-group">
                 <label class="control-label">Город</label>
                 <select id="city" name="cityId" class="form-control input-sm">
-                    <option value="" selected>Вся область</option>
+                    <?php if (!empty($this->search['cityId'])): ?>
+                        <option value="<?= $this->search['cityId'] ?>" selected>Вся область</option>
+                    <?php else: ?>
+                        <option value="" selected>Вся область</option>
+                    <?php endif; ?>
                 </select>
                 <span class="help-block"></span>
             </div>
