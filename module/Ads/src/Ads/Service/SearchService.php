@@ -38,6 +38,7 @@ class SearchService
         }
 
         $query = $query
+            ->orderBy('ads.created', 'DESC')
             ->setMaxResults($limit)
             ->setFirstResult($offset)
             ->getQuery();
