@@ -46,13 +46,6 @@ class AdsController extends AbstractActionController
                 $em->find('Application\Entity\Categories', $data['categoryId'])
             );
         }
-
-        if (!empty($data['query'])) {
-            $this->layout()->setVariable(
-                'query',
-                $data['query']
-            );
-        }
     }
 
     public function showAdsAction()
@@ -218,6 +211,7 @@ class AdsController extends AbstractActionController
 
         if (!empty($data['categoryId'])) {
             $category = $em->find('Application\Entity\Categories', $data['categoryId']);
+
             $cats = $nsc->wrapNode($category)->getChildren();
 
             if (!empty($cats)) {
@@ -239,6 +233,12 @@ class AdsController extends AbstractActionController
 
                 $viewModel->setVariable('attributes', $attrsVals);
             }
+        } else {
+            $categories = $em->getRepository('Application\Entity\Categories')
+                ->getRootCategories()
+                ->getResult(Query::HYDRATE_ARRAY);
+
+            $viewModel->setVariable('categories', $categories);
         }
 
         return $viewModel;
