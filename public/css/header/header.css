@@ -1,8 +1,16 @@
-.dropdown-submenu .dropdown-menu {
-    height: 500px;
-    overflow-y: scroll;
+.navbar-form .dropdown {
+    position: relative;
 }
 
-.dropdown li {
-    cursor: pointer;
+.navbar-form .dropdown > a {
+    display: inline-block;
+    width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.navbar-form .dropdown > a .caret {
+    position: absolute;
+    top: 15px;
+    right: 6px;
 }

@@ -46,3 +46,12 @@
     -moz-border-radius: 6px 0 6px 6px;
     border-radius: 6px 0 6px 6px;
 }
+
+.dropdown-submenu .dropdown-menu {
+    max-height: 500px;
+    overflow: auto;
+}
+
+.dropdown li {
+    cursor: pointer;
+}
