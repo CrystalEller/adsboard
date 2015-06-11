@@ -56,7 +56,7 @@ return array(
                     ),
                 ),
             ),
-            'deleteAds' => array(
+            'adminDeleteAds' => array(
                 'type' => 'Zend\Mvc\Router\Http\Segment',
                 'options' => array(
                     'route' => '/admin/user/ads/delete/:adsId',
@@ -69,7 +69,7 @@ return array(
                     ),
                 ),
             ),
-            'getUserAds' => array(
+            'adminGetUserAds' => array(
                 'type' => 'Zend\Mvc\Router\Http\Segment',
                 'options' => array(
                     'route' => '/admin/user/ads/:adsId',
