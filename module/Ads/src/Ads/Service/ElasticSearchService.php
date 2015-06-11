@@ -60,6 +60,7 @@ class ElasticSearchService
             'category' => $categories,
             'region' => $data->getRegionid()->getId(),
             'city' => $data->getCityid()->getId(),
+            'price' => $data->getPrice() ?: null,
             'props' => array(
                 'attr' => array_map('current', $attr),
                 'values' => array_map('current', $values)
@@ -78,9 +79,9 @@ class ElasticSearchService
         $id = $data->getId();
 
         $doc = array(
-            'id' => $id,
             'title' => $data->getTitle(),
-            'description' => $data->getDescription()
+            'description' => $data->getDescription(),
+            'price' => $data->getPrice()
         );
 
         $this->client->updateDocument($id, $doc, 'adsboard', 'ads');
@@ -88,11 +89,9 @@ class ElasticSearchService
         $this->client->getIndex('adsboard')->refresh();
     }
 
-    public function deleteAds(Ads $data)
+    public function deleteAds($adsId)
     {
-        $id = $data->getId();
-
-        $this->client->deleteIds([$id], 'adsboard', 'ads');
+        $this->client->deleteIds([$adsId], 'adsboard', 'ads');
 
         $this->client->getIndex('adsboard')->refresh();
     }

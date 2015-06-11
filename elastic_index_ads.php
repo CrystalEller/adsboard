@@ -56,6 +56,7 @@ if (!empty($ads)) {
             'category' => $catsIds,
             'region' => $val->getRegionid()->getId(),
             'city' => $val->getCityid()->getId(),
+            'price' => $val->getPrice() ?: null,
             'props' => array(
                 'attr' => $attrsValues,
                 'values' => $value
