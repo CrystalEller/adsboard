@@ -1,0 +1,20 @@
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin-bottom: 60px;
+}
+
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 50px;
+}
+
+.footer .container p {
+    border-top: 1px solid #eee;
+    padding-top: 10px;
+}
