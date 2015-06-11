@@ -83,6 +83,7 @@
                 if (!$target.hasClass('data-uploaded')) {
                     $.ajax({
                         url: '/admin/user/ads/' + $target.data('adsId'),
+                        dataType: 'json',
                         success: function (data) {
                             var adsData = data.ads;
                             var panelBody = $('#ads-' + adsData.id + ' .panel-body').text('');
@@ -98,8 +99,6 @@
                                 .append(row.clone().text('Заголовок : ' + adsData.title))
                                 .append(row.clone().text('Атрибуты : '))
                                 .append(props);
-
-                            console.log(data.adsProps);
 
                             $.each(data.adsProps, function (index, value) {
                                 if (Array.isArray(value)) {
@@ -168,7 +167,7 @@
                         var a = $('<a>').attr({
                             'href': 'javascript:void(0)',
                             'data-name': column.field,
-                            'data-pk': row.id,
+                            'data-id': row.id,
                             'data-url': '/admin/user/update',
                             'data-value': result
                         });

@@ -76,6 +76,12 @@
 <script>
     $('#left-menu').height($(document).height() - $('#main-navbar').height() - 3);
     $('#plugins').height($(document).height() - $('#main-navbar').height() - 3);
+
+    $(document).ajaxComplete(function (event, request) {
+        if (/^3\d{2}$/.test(request.status)) {
+            window.location.href = request.getResponseHeader('Location');
+        }
+    });
 </script>
 
 </body>

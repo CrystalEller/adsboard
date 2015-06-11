@@ -18,6 +18,7 @@
         ->prependStylesheet($this->basePath() . '/css/bootstrap.css')
         ->prependStylesheet($this->basePath() . '/css/drop-down-submenu/drop-down-submenu.css')
         ->prependStylesheet($this->basePath() . '/css/header/header.css')
+        ->prependStylesheet($this->basePath() . '/css/footer/footer.css')
         ->prependStylesheet($this->basePath() . '/css/reset.min.css')
     ?>
 
@@ -31,6 +32,7 @@
 
 </head>
 <body>
+
 <div class="container">
     <nav class="navbar navbar-default" id="main-navbar">
         <div class="container-fluid">
@@ -122,12 +124,16 @@
         </div>
     </nav>
 </div>
+
 <div class="container">
     <?php echo $this->content; ?>
-    <hr>
-    <footer>
+</div>
+
+
+<div class="footer">
+    <div class="container">
         <p>&copy; <?php echo date('Y') ?> by MaxTech</p>
-    </footer>
+    </div>
 </div>
 
 <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -171,11 +177,8 @@
 
             $selectWrapper.find('.selected').text($target.text());
         }).on('mouseenter', 'li', function (e) {
-            var target = $(this).find('>a'),
+            var target = $(e.target),
                 dropDown = target.prev();
-
-            $('#locationList>li>ul').hide();
-            dropDown.show();
 
             if (dropDown.children().length == 0 &&
                 target.data('region-id')
@@ -187,10 +190,6 @@
                     data: {regionid: target.data('region-id')},
                     success: function (data) {
                         var cities = data.cities;
-
-                        if (cities.length > 0) {
-                            dropDown.show();
-                        }
 
                         $.each(cities, function (key, value) {
                             var menuItem = $('<li>');
@@ -228,11 +227,8 @@
 
             $selectWrapper.find('.selected').text($target.text());
         }).on('mouseenter', 'li', function (e) {
-            var target = $(this).find('>a'),
+            var target = $(e.target),
                 dropDown = target.prev();
-
-            $('#categories>li>ul').hide();
-            dropDown.show();
 
             if (dropDown.children().length == 0 &&
                 target.data('cat-id')
@@ -244,10 +240,6 @@
                     data: {pid: target.data('cat-id')},
                     success: function (data) {
                         var cats = data.cats;
-
-                        if (cats.length > 0) {
-                            dropDown.show();
-                        }
 
                         $.each(cats, function (key, value) {
                             var menuItem = $('<li>');
@@ -311,10 +303,13 @@
                     .data(dataKey, id)
                     .text(text)
             );
-
-            dropDownMenu.hide();
         }
 
+        $(document).ajaxComplete(function (event, request) {
+            if (/^3\d{2}$/.test(request.status)) {
+                window.location.href = request.getResponseHeader('Location');
+            }
+        });
     });
 </script>
 
