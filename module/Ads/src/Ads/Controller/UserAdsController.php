@@ -137,7 +137,7 @@ class UserAdsController extends AbstractActionController
             $em->remove($ads);
             $em->flush();
 
-            $elasticService->deleteAds($ads);
+            $elasticService->deleteAds(intval($adsId));
 
             return new JsonModel(array(1));
         } else {
@@ -237,7 +237,7 @@ class UserAdsController extends AbstractActionController
 
                 $ads = $hydrator->hydrate($data, $ads);
 
-                $em->merge($ads);
+                $ads = $em->merge($ads);
                 $em->flush();
 
                 $elasticService->updateAds($ads);
