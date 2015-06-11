@@ -16,6 +16,7 @@ class AdsController extends AbstractActionController
     {
         $em = $this->getEntityManager();
         $adsId = $this->params('adsId');
+        $elasticClient = $this->getServiceLocator()->get('elastic-ads');
 
         $em->createQueryBuilder()
             ->delete('Application\Entity\Ads', 'a')
@@ -23,6 +24,8 @@ class AdsController extends AbstractActionController
             ->setParameter(1, $adsId)
             ->getQuery()
             ->execute();
+
+        $elasticClient->deleteAds($adsId);
 
         return new JsonModel(array($adsId));
 
