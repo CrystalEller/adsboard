@@ -44,15 +44,14 @@
                             <?php if (is_object($identity) &&
                                 $identity->getId() === $ad['userid']['id']
                             ): ?>
-                                <div class="row margin-top25 text-right">
+                                <div class="row text-right">
                                     <div class="col-lg-8 col-lg-push-4">
                                         <a class="btn btn-default btn-xs"
                                            href="<?= $this->url('updateUserAds/getUpdateAdsForm', array('adsId' => $ad['id'])) ?>"
                                             >
                                             Обновить
                                         </a>
-                                        <a id="deleteAds"
-                                           class="btn btn-default btn-xs"
+                                        <a class="btn btn-default btn-xs deleteAds"
                                            data-modal-body="Вы уверены, что хотите удальть объявление?"
                                            data-modal-title="Удаление объявления"
                                            data-notify-success="Объявление успешно удалено"
@@ -90,7 +89,7 @@
 </div>
 
 <script>
-    $('#deleteAds').click(function (e) {
+    $('.deleteAds').click(function (e) {
         var $aTarget = $(e.target);
         var $modal = $('#modal');
 
