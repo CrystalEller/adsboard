@@ -4,6 +4,7 @@ namespace User\Controller;
 
 use Doctrine\ORM\EntityManager;
 use User\Form\RegistrationForm;
+use User\Service\ElasticSearchService;
 use Zend\Authentication\AuthenticationService;
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\ViewModel;
@@ -14,6 +15,7 @@ class UserController extends AbstractActionController
     protected $em;
     protected $registrationForm;
     protected $authService;
+    protected $elasticUserSearch;
 
     public function loginAction()
     {
@@ -52,6 +54,7 @@ class UserController extends AbstractActionController
     public function confirmRegistrationAction()
     {
         $em = $this->getEntityManager();
+        $elasticService = $this->getElasticSearchService();
         $hash = $this->params('hash');
 
         $user = $em->getRepository('\Application\Entity\Users')->findOneBy(array('password' => $hash));
@@ -64,8 +67,10 @@ class UserController extends AbstractActionController
             $user->setStat('confirmed');
             $user->setRole('user');
 
-            $em->persist($user);
+            $user = $em->merge($user);
             $em->flush();
+
+            $elasticService->updateUser($user);
         }
 
         return array();
@@ -76,6 +81,7 @@ class UserController extends AbstractActionController
         $request = $this->getRequest();
         $form = $this->getRegistrationForm();
         $em = $this->getEntityManager();
+        $elasticService = $this->getElasticSearchService();
 
         if ($request->isPost()) {
             $form->setData($request->getPost());
@@ -97,6 +103,7 @@ class UserController extends AbstractActionController
                 $em->persist($user);
                 $em->flush();
 
+                $elasticService->saveUser($user);
 
                 $view = new ViewModel();
                 $view->setTemplate('user/user/email-registration');
@@ -105,6 +112,21 @@ class UserController extends AbstractActionController
         }
 
         return array('form' => $form);
+    }
+
+    public function setElasticSearchService(ElasticSearchService $service)
+    {
+        $this->elasticUserSearch = $service;
+
+        return $this;
+    }
+
+    public function getElasticSearchService()
+    {
+        if (!$this->elasticUserSearch) {
+            $this->elasticUserSearch = $this->getServiceLocator()->get('User\Service\Search');
+        }
+        return $this->elasticUserSearch;
     }
 
     public function setAuthService(AuthenticationService $authService)
