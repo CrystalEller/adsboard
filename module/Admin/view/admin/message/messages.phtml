@@ -1,0 +1,133 @@
+<?php $this->headLink()
+    ->prependStylesheet($this->basePath() . '/css/bootstrap-table/bootstrap-table.css') ?>
+
+<?php $this->inlineScript()
+    ->appendFile($this->basePath() . '/js/bootstrap-table/bootstrap-table.js')
+    ->appendFile($this->basePath() . '/js/bootstrap-table/locale/bootstrap-table-ru-RU.min.js')
+    ->appendFile($this->basePath() . '/js/validator/validator.min.js') ?>
+
+<table id="messages"
+       data-toggle="table"
+       data-url="<?= $this->url('getAdminMessages') ?>"
+       data-pagination="true"
+       data-side-pagination="server"
+       data-page-list="[5, 10, 20, 50, 100, 200]">
+    <thead>
+    <tr>
+        <th class="col-lg-2" data-field="id" data-align="left" data-visible="false" data-sortable="true"></th>
+        <th class="col-lg-2" data-field="created" data-formatter="dateFormatter" data-align="left" data-sortable="true">
+            Дата
+        </th>
+        <th class="col-lg-2" data-field="email" data-align="left" data-sortable="true">Email</th>
+        <th class="col-lg-7" data-field="message" data-align="left" data-sortable="true">Сообщение</th>
+        <th class="col-lg-1" data-align="left" data-formatter="actionsFormatter" data-sortable="true"
+            data-events="actions">Действия
+        </th>
+    </tr>
+    </thead>
+</table>
+
+<div class="modal fade" id="modal-message" tabindex="-1" role="dialog" aria-hidden="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Написать ответ</h4>
+            </div>
+            <div class="modal-body">
+                <form id="message-form" data-toggle="validator" data-notify-success="Сообщение успешно отправлено">
+                    <div class="form-group">
+                        <label for="email" class="control-label">Email</label>
+                        <input type="email" name="email" class="form-control" id="email" placeholder="Email"
+                               data-error="Не правильный email" disabled="disabled" required>
+
+                        <div class="help-block with-errors"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="subject" class="control-label">Subject</label>
+                        <input type="text" name="subject" class="form-control" id="subject" placeholder="Subject">
+                    </div>
+                    <div class="form-group">
+                        <label for="answer" class="control-label">Сообщение</label>
+                        <textarea name="message"
+                                  id="answer"
+                                  data-minlength="20"
+                                  data-minlength-error="Слишком короткое сообщение"
+                                  data-maxlength="100"
+                                  data-maxlength-error="Слишком длинное сообщение"
+                                  class="form-control"
+                                  rows="8" required></textarea>
+
+                        <div class="help-block with-errors"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary send-message" data-dismiss="modal">Отправить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function actionsFormatter(value, row, index) {
+        return [
+            '<a class="delete" href="#" title="Delete">',
+            '<i class="glyphicon glyphicon-trash"></i>',
+            '</a>',
+            '<a class="answer" href="#" title="Answer">',
+            '<i class="glyphicon glyphicon-envelope"></i>',
+            '</a>'
+        ].join('');
+    }
+
+    window.actions = {
+        'click .delete': function (e, value, row, index) {
+            $.ajax({
+                url: '/admin/message/delete/' + row.id,
+                success: function (data) {
+                    $('#messages').bootstrapTable('refresh');
+                },
+                error: function (xhr) {
+                    alert(xhr.status + ' ' + xhr.responseText)
+                }
+            });
+        },
+        'click .answer': function (e, value, row, index) {
+            $('#modal-message').modal('show');
+            $('#email').val(row.email);
+
+            $('#modal-message .send-message').one("click",function () {
+                $.ajax({
+                    type: 'POST',
+                    url: '/admin/message/answer',
+                    dataType: 'json',
+                    data: {
+                        email: row.email,
+                        subject: $('#subject').val(),
+                        message: $('#answer').val()
+                    },
+                    success: function (data) {
+                        $.notify({
+                            message: $('#message-form').data('notify-success')
+                        }, {
+                            type: "success",
+                            z_index: 1031,
+                            delay: 3000,
+                            timer: 1000
+                        });
+                    },
+                    error: function (xhr) {
+                        alert(xhr.status + ' ' + xhr.responseText)
+                    }
+                });
+            });
+        }
+    };
+
+    function dateFormatter(value, row, index) {
+        return new Date(value.date).toLocaleDateString();
+    }
+</script>

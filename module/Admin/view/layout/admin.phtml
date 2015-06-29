@@ -20,6 +20,7 @@
 
     <!-- Scripts -->
     <?php echo $this->headScript()
+        ->prependFile($this->basePath() . '/js/bootstrap-notify/bootstrap-notify.min.js')
         ->prependFile($this->basePath() . '/js/bootstrap.min.js')
         ->prependFile($this->basePath() . '/js/jquery.min.js')
         ->prependFile($this->basePath() . '/js/respond.min.js', 'text/javascript', array('conditional' => 'lt IE 9',))
@@ -66,6 +67,8 @@
             <li><a class="left-admin-menu" href="<?= $this->url('showCategories') ?>">Категории</a></li>
             <hr>
             <li><a class="left-admin-menu" href="<?= $this->url('showUsers') ?>">Пользователи</a></li>
+            <hr>
+            <li><a class="left-admin-menu" href="<?= $this->url('adminMessages') ?>">Сообщения</a></li>
         </ul>
     </div>
     <div id="plugins" class="col-md-9">
@@ -83,6 +86,6 @@
         }
     });
 </script>
-
+<?php echo $this->inlineScript();?>
 </body>
 </html>
