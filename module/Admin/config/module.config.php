@@ -95,6 +95,49 @@ return array(
                     )
                 )
             ),
+            'adminMessages' => array(
+                'type' => 'Zend\Mvc\Router\Http\Literal',
+                'options' => array(
+                    'route' => '/admin/messages',
+                    'defaults' => array(
+                        'controller' => 'Admin\Controller\Message',
+                        'action' => 'messages',
+                    )
+                )
+            ),
+            'getAdminMessages' => array(
+                'type' => 'Zend\Mvc\Router\Http\Literal',
+                'options' => array(
+                    'route' => '/admin/getMessages',
+                    'defaults' => array(
+                        'controller' => 'Admin\Controller\Message',
+                        'action' => 'get',
+                    )
+                )
+            ),
+            'deleteAdminMessage' => array(
+                'type' => 'Zend\Mvc\Router\Http\Segment',
+                'options' => array(
+                    'route' => '/admin/message/delete/:msgId',
+                    'constraints' => array(
+                        'action' => '\d+'
+                    ),
+                    'defaults' => array(
+                        'controller' => 'Admin\Controller\Message',
+                        'action' => 'delete',
+                    )
+                )
+            ),
+            'sendAdminMessage' => array(
+                'type' => 'Zend\Mvc\Router\Http\Literal',
+                'options' => array(
+                    'route' => '/admin/message/answer',
+                    'defaults' => array(
+                        'controller' => 'Admin\Controller\Message',
+                        'action' => 'answer',
+                    )
+                )
+            ),
         ),
     ),
 
@@ -103,7 +146,8 @@ return array(
             'Admin\Controller\Admin' => 'Admin\Controller\AdminController',
             'Admin\Controller\Category' => 'Admin\Controller\CategoryController',
             'Admin\Controller\Users' => 'Admin\Controller\UsersController',
-            'Admin\Controller\Ads' => 'Admin\Controller\AdsController'
+            'Admin\Controller\Ads' => 'Admin\Controller\AdsController',
+            'Admin\Controller\Message' => 'Admin\Controller\MessageController'
         ),
     ),
 
@@ -114,7 +158,10 @@ return array(
                     $sm->get('doctrine.entitymanager.orm_default')
                 );
             },
-        )
+        ),
+        'invokables' => array(
+            'Admin\Filter\EmailMessage' => 'Admin\Filter\EmailMessageFilter'
+        ),
     ),
 
     'view_manager' => array(
