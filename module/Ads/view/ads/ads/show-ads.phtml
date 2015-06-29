@@ -1,6 +1,7 @@
 <?php $this->headScript()
     ->appendFile($this->basePath() . '/js/image-gallery/jquery.blueimp-gallery.min.js')
     ->appendFile($this->basePath() . '/js/image-gallery/bootstrap-image-gallery.js')
+    ->appendFile($this->basePath() . '/js/validator/validator.min.js')
 ?>
 <?php $this->headLink()
     ->appendStylesheet($this->basePath() . '/css/image-gallery/bootstrap-image-gallery.min.css')
@@ -15,7 +16,7 @@
         <h3><?= $ads->getTitle() ?></h3>
     </div>
 </div>
-<div class="row margin-top25">
+<div class="ads row margin-top25">
     <div class="col-lg-4 border-right">
         <div>
             <h2>
@@ -46,10 +47,15 @@
                 Телефон: +38<?= $this->escapeHtml($ads->getTelephone()) ?>
             </h4>
         </div>
-        <div>
+        <div class="published">
             <h4>
                 Опубликовано: <?= $ads->getCreated()->format('Y-m-d') ?>
             </h4>
+        </div>
+        <div class="complain">
+            <a href="#">
+                Пожаловаться на объявление
+            </a>
         </div>
     </div>
     <div class="col-lg-8">
@@ -82,18 +88,14 @@
     </div>
 </div>
 
-<!-- The Bootstrap Image Gallery lightbox, should be a child element of the document body -->
 <div id="blueimp-gallery" class="blueimp-gallery">
-    <!-- The container for the modal slides -->
     <div class="slides"></div>
-    <!-- Controls for the borderless lightbox -->
     <h3 class="title"></h3>
     <a class="prev">‹</a>
     <a class="next">›</a>
     <a class="close">×</a>
     <a class="play-pause"></a>
     <ol class="indicator"></ol>
-    <!-- The modal dialog, which will be used to wrap the lightbox content -->
     <div class="modal fade">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -116,3 +118,82 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-hidden="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Пожаловаться на объявление</h4>
+            </div>
+            <div class="modal-body">
+                <form action="<?php echo $this->url('sendComplainMessage',array('adsId' => $ads->getId()));?>" id="complain" data-toggle="validator" data-notify-success="Сообщение успешно отправлено">
+                    <div class="form-group">
+                        <label for="inputEmail" class="control-label">Email</label>
+                        <input type="email" name="email" class="form-control" id="inputEmail" placeholder="Email" data-error="Не правильный email" required>
+                        <div class="help-block with-errors"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputTwitter" class="control-label">Сообщение</label>
+                        <textarea name="message"
+                                  data-minlength="20"
+                                  data-minlength-error="Слишком короткое сообщение"
+                                  data-maxlength="100"
+                                  data-maxlength-error="Слишком длинное сообщение"
+                                  class="form-control"
+                                  rows="8" required></textarea>
+                        <div class="help-block with-errors"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary send-complain">Отправить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function(){
+
+        $('#complain').validator({
+            errors: {
+                minlength: $('#complain').data('minlength-error'),
+                maxlength: $('#complain').data('maxlength-error')
+            }
+        });
+
+        $('.complain a').click(function(e){
+            $('#modal').modal('show');
+            e.preventDefault();
+        });
+
+        $('.send-complain').click(function(e){
+
+            $.ajax({
+                type: 'POST',
+                url:$('#complain').attr('action'),
+                data: $('#complain').serialize(),
+                dataType: 'json',
+                success: function(data) {
+                    $.notify({
+                        message: $('#complain').data('notify-success')
+                    }, {
+                        type: "success",
+                        z_index: 1031,
+                        delay: 3000,
+                        timer: 1000
+                    });
+                },
+                error: function(){
+                    alert('error');
+                }
+            });
+
+
+            $('#modal').modal('hide');
+            e.preventDefault();
+        });
+    });
+</script>
