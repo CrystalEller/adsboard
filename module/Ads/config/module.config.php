@@ -177,6 +177,42 @@ return array(
                     )
                 )
             ),
+            'sendComplainMessage' => array(
+                'type' => 'Zend\Mvc\Router\Http\Segment',
+                'options' => array(
+                    'route' => '/ads/:adsId/message/create',
+                    'constraints' => array(
+                        'adsId' => '\d+'
+                    ),
+                    'defaults' => array(
+                        'controller' => 'Ads\Controller\Message',
+                        'action' => 'create',
+                    ),
+                ),
+            ),
+            'deleteComplainMessage' => array(
+                'type' => 'Zend\Mvc\Router\Http\Segment',
+                'options' => array(
+                    'route' => '/ads/message/delete/:msgId',
+                    'constraints' => array(
+                        'msgId' => '\d+'
+                    ),
+                    'defaults' => array(
+                        'controller' => 'Ads\Controller\Message',
+                        'action' => 'delete',
+                    ),
+                ),
+            ),
+            'getComplainMessages' => array(
+                'type' => 'Zend\Mvc\Router\Http\Literal',
+                'options' => array(
+                    'route' => '/ads/getMessages',
+                    'defaults' => array(
+                        'controller' => 'Ads\Controller\Message',
+                        'action' => 'getMessages',
+                    ),
+                ),
+            ),
         ),
     ),
 
@@ -184,7 +220,8 @@ return array(
         'invokables' => array(
             'Ads\Controller\Ads' => 'Ads\Controller\AdsController',
             'Ads\Controller\UserAds' => 'Ads\Controller\UserAdsController',
-            'Ads\Controller\AdsForm' => 'Ads\Controller\AdsFormController'
+            'Ads\Controller\AdsForm' => 'Ads\Controller\AdsFormController',
+            'Ads\Controller\Message' => 'Ads\Controller\MessageController',
         ),
     ),
 
@@ -197,6 +234,7 @@ return array(
         ),
         'invokables' => array(
             'Ads\Filter\AdsUpdateFilter' => 'Ads\Filter\AdsUpdateFilter',
+            'Ads\Filter\Message' => 'Ads\Filter\MessageFilter',
         ),
     ),
 

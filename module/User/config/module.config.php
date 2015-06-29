@@ -80,8 +80,8 @@ return array(
             'Zend\Authentication\AuthenticationService' => function ($serviceManager) {
                 return $serviceManager->get('doctrine.authenticationservice.orm_default');
             },
-            'User\Service\Search' => 'User\Service\Factory\ElasticSearchServiceFactory'
-        )
+            'User\Service\Search' => 'User\Service\Factory\ElasticSearchServiceFactory',
+        ),
     ),
 
     'session' => array(
