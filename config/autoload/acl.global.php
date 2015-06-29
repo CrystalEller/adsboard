@@ -8,6 +8,11 @@ return array(
                 'field' => 'id',
                 'user_field' => 'userid'
             ),
+            'message' => array(
+                'entity' => 'Application\Entity\Messages',
+                'field' => 'id',
+                'user_field' => 'userid'
+            ),
         ),
         'roles' => array(
             'guest' => array(
@@ -22,17 +27,20 @@ return array(
                 'Admin\Controller\Ads' => null,
                 'Admin\Controller\Category' => null,
                 'Admin\Controller\Users' => null,
+                'Ads\Controller\Message'=>null,
+                'Admin\Controller\Message'=>null,
                 'FormBuilder\Controller\FormBuilder' => null
             ),
             'user' => array(
                 'Ads\Controller\AdsForm' => null,
                 'Ads\Controller\UserAds' => null,
-                'FormBuilder\Controller\FormBuilder' => array('getForm')
+                'FormBuilder\Controller\FormBuilder' => array('getForm'),
             ),
             'guest' => array(
                 'Ads\Controller\Ads' => null,
                 'User\Controller\User' => null,
                 'User\Controller\Captcha' => null,
+                'Ads\Controller\Message' => array('create'),
                 'Ads\Controller\AdsForm' => array('getCities', 'getRegions', 'getCategories', 'getRootCategories'),
             )
         )
