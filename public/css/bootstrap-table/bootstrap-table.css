@@ -9,6 +9,14 @@
     border-bottom: 1px solid #dddddd;
     border-collapse: collapse !important;
     border-radius: 1px;
+    table-layout: fixed;
+    word-wrap: break-word;
+}
+
+.bootstrap-table .table td .glyphicon {
+    font-size: 20px;
+    display: inline-block;
+    margin:3px;
 }
 
 .bootstrap-table

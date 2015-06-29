@@ -9,3 +9,11 @@
 .border-right {
     border-right: 1px solid #eee;
 }
+
+.ads .complain {
+    font-size: 1.2em;
+    padding: 10px 0;
+    margin-top: 40px;
+    border-bottom: 1px solid #eee;
+    border-top: 1px solid #eee;
+}
