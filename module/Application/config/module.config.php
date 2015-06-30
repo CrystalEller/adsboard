@@ -35,6 +35,12 @@ return array(
         ),
     ),
 
+    'controllers' => array(
+        'invokables' => array(
+            'Application\Controller\Console\ElasticSearch' => 'Ads\Controller\Console\ElasticSearchController',
+        ),
+    ),
+
     'view_manager' => array(
         'display_not_found_reason' => true,
         'display_exceptions' => true,
@@ -88,10 +94,28 @@ return array(
         ),
     ),
 
-    // Placeholder for console routes
     'console' => array(
         'router' => array(
-            'routes' => array(),
-        ),
+            'routes' => array(
+                'elastic-import-ads' => array(
+                    'options' => array(
+                        'route'    => 'elastic import ads',
+                        'defaults' => array(
+                            'controller' => 'Application\Controller\Console\ElasticSearch',
+                            'action'     => 'importAds'
+                        )
+                    )
+                ),
+                'elastic-import-users' => array(
+                    'options' => array(
+                        'route'    => 'elastic import users',
+                        'defaults' => array(
+                            'controller' => 'Application\Controller\Console\ElasticSearch',
+                            'action'     => 'importUsers'
+                        )
+                    )
+                )
+            )
+        )
     ),
 );
