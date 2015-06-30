@@ -29,8 +29,11 @@ class Module
         $eventManager = $e->getApplication()->getEventManager();
         $moduleRouteListener = new ModuleRouteListener();
         $moduleRouteListener->attach($eventManager);
-        $this->bootstrapSession($e);
-        $eventManager->attach('route', array($this, 'loadAclConfiguration'), 2);
+
+        if (php_sapi_name() !== 'cli') {
+            $this->bootstrapSession($e);
+            $eventManager->attach('route', array($this, 'loadAclConfiguration'), 2);
+        }
     }
 
     public function loadAclConfiguration(MvcEvent $e)
