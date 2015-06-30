@@ -16,10 +16,12 @@
         ->prependStylesheet($this->basePath() . '/css/bootstrap-theme.min.css')
         ->prependStylesheet($this->basePath() . '/css/bootstrap.min.css')
         ->prependStylesheet($this->basePath() . '/css/admin.css')
+        ->prependStylesheet($this->basePath() . '/css/reset.min.css')
     ?>
 
     <!-- Scripts -->
     <?php echo $this->headScript()
+        ->prependFile($this->basePath() . '/js/common/ajax-redirect.js')
         ->prependFile($this->basePath() . '/js/bootstrap-notify/bootstrap-notify.min.js')
         ->prependFile($this->basePath() . '/js/bootstrap.min.js')
         ->prependFile($this->basePath() . '/js/jquery.min.js')
@@ -27,9 +29,9 @@
         ->prependFile($this->basePath() . '/js/html5shiv.js', 'text/javascript', array('conditional' => 'lt IE 9',)); ?>
 </head>
 <body>
-<div class="container-fluid nopadding">
+<div class="container-full">
     <nav class="navbar navbar-default" id="main-navbar">
-        <div class="container-fluid">
+        <div class="row-fluid">
 
             <div class="navbar-header">
                 <a class="navbar-brand" href="<?= $this->url('home') ?>">AdsBoard</a>
@@ -44,6 +46,23 @@
             </div>
         </div>
     </nav>
+
+    <div class="row">
+        <div id="left-menu" class="col-md-3">
+            <ul class="nav nav-stacked left-admin-menu">
+                <li><a href="#">Главная</a></li>
+                <hr>
+                <li><a href="<?= $this->url('showCategories') ?>">Категории</a></li>
+                <hr>
+                <li><a href="<?= $this->url('showUsers') ?>">Пользователи</a></li>
+                <hr>
+                <li><a href="<?= $this->url('adminMessages') ?>">Сообщения</a></li>
+            </ul>
+        </div>
+        <div id="plugins" class="col-md-9">
+            <?php echo $this->content; ?>
+        </div>
+    </div>
 </div>
 
 <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-hidden="false">
@@ -59,33 +78,7 @@
     </div>
 </div>
 
-<div id="content" class="container-fluid nopadding">
-    <div id="left-menu" class="col-md-3 nopadding">
-        <ul class="nav nav-stacked">
-            <li><a class="left-admin-menu" href="#">Главная</a></li>
-            <hr>
-            <li><a class="left-admin-menu" href="<?= $this->url('showCategories') ?>">Категории</a></li>
-            <hr>
-            <li><a class="left-admin-menu" href="<?= $this->url('showUsers') ?>">Пользователи</a></li>
-            <hr>
-            <li><a class="left-admin-menu" href="<?= $this->url('adminMessages') ?>">Сообщения</a></li>
-        </ul>
-    </div>
-    <div id="plugins" class="col-md-9">
-        <?php echo $this->content; ?>
-    </div>
-</div>
-
-<script>
-    $('#left-menu').height($(document).height() - $('#main-navbar').height() - 3);
-    $('#plugins').height($(document).height() - $('#main-navbar').height() - 3);
-
-    $(document).ajaxComplete(function (event, request) {
-        if (/^3\d{2}$/.test(request.status)) {
-            window.location.href = request.getResponseHeader('Location');
-        }
-    });
-</script>
-<?php echo $this->inlineScript();?>
+<?php echo $this->inlineScript()
+    ->prependFile($this->basePath() . '/js/common/admin/admin.js'); ?>
 </body>
 </html>

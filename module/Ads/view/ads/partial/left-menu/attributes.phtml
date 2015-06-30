@@ -1,7 +1,7 @@
-<?php echo $this->headScript()
-    ->prependFile($this->basePath() . '/js/checkbox-x.min.js') ?>
-<?php echo $this->headLink()
-    ->prependStylesheet($this->basePath() . '/css/checkbox-x.min.css') ?>
+<?php $this->inlineScript()
+    ->appendFile($this->basePath() . '/js/checkbox-x/checkbox-x.min.js') ?>
+<?php $this->headLink()
+    ->prependStylesheet($this->basePath() . '/css/checkbox-x/checkbox-x.min.css') ?>
 
 <?php
 $names = array();

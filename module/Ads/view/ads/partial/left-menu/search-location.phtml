@@ -1,3 +1,6 @@
+<?php $this->inlineScript()
+    ->appendFile($this->basePath() . '/js/common/base/search-location.js');?>
+
 <?php
 $url = $this->url(
     'search',
@@ -20,7 +23,7 @@ $url = $this->url(
         <div class="col-lg-12">
             <div class="form-group">
                 <label class="control-label">Область</label>
-                <select id="region" name="regionId" class="form-control input-sm">
+                <select id="region" data-url="<?php echo $this->url('getRegions');?>" name="regionId" class="form-control input-sm">
                     <?php if (!empty($this->search['regionId'])): ?>
                         <option value="<?= $this->search['regionId'] ?>" selected>Вся Украина</option>
                     <?php else: ?>
@@ -31,7 +34,7 @@ $url = $this->url(
             </div>
             <div class="form-group">
                 <label class="control-label">Город</label>
-                <select id="city" name="cityId" class="form-control input-sm">
+                <select id="city" data-url="<?php echo $this->url('getCities');?>" name="cityId" class="form-control input-sm">
                     <?php if (!empty($this->search['cityId'])): ?>
                         <option value="<?= $this->search['cityId'] ?>" selected>Вся область</option>
                     <?php else: ?>
@@ -48,50 +51,3 @@ $url = $this->url(
         </div>
     </div>
 </form>
-
-<script>
-    $(document).ready(function () {
-        $('#region').change(function () {
-            var target = $(this);
-            $.ajax({
-                type: 'POST',
-                url: '/getCities',
-                dataType: 'json',
-                data: {regionid: target.val()},
-                success: function (data) {
-                    var $city = $('#city');
-
-                    $city.find("option[value!='']").remove();
-
-                    $.each(data['cities'], function (index, value) {
-                        $('#city').append(
-                            $('<option>')
-                                .attr('value', value['id'])
-                                .text(value['name']))
-                    });
-                },
-                error: function (xhr) {
-                    alert(xhr.status + ' ' + xhr.responseText)
-                }
-            });
-        });
-
-        $.ajax({
-            url: '/getRegions',
-            dataType: 'json',
-            success: function (data) {
-                var $region = $('#region');
-
-                $.each(data['regions'], function (index, value) {
-                    $region.append(
-                        $('<option>')
-                            .attr('value', value['id'])
-                            .text(value['name']))
-                });
-            },
-            error: function (xhr) {
-                alert(xhr.status + ' ' + xhr.responseText)
-            }
-        });
-    });
-</script>

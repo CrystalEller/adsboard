@@ -1,8 +1,8 @@
-<?php echo $this->headScript()
+<?php $this->inlineScript()
     ->appendFile($this->basePath() . '/js/form-builder/field-edit-form.js')
     ->appendFile($this->basePath() . '/js/form-builder/form-field.js')
     ->appendFile($this->basePath() . '/js/form-builder/form-builder.js'); ?>
-<?php echo $this->headLink()->prependStylesheet($this->basePath() . '/css/form-builder.css') ?>
+<?php $this->headLink()->prependStylesheet($this->basePath() . '/css/form-builder.css') ?>
 
 <div id='form-builder' class="container-fluid">
     <div id="form-elements" class="col-lg-6">

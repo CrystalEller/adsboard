@@ -1,4 +1,4 @@
-<?php echo $this->headLink()
+<?php $this->headLink()
     ->prependStylesheet($this->basePath() . '/css/registration.css')
 ?>
 <div class="container">
@@ -68,30 +68,3 @@
         </div>
     </div>
 </div>
-
-<script>
-    /*        $("#registration").submit(function(e){
-     $.ajax({
-     type: "POST",
-     url: $(e.srcElement).attr('action'),
-     dataType: 'json',
-     data: (function(){
-     var data={};
-     data['captcha'] = {
-     "input":$('input[name="captcha[input]"]').val(),
-     "id":$('input[name="captcha[id]"]').val()
-     };
-     $('#registration input:not([name*="["])').each(function( index, element ) {
-     data[$(element).attr('name')] = $(element).val();
-     });
-     return data;
-     })()
-     }).done(function( msg ) {
-     $.each( msg, function(key,value ) {
-     $('input[name="'+key+'[input]"]+p span').text(value);
-     $('input[name='+key+']+p span').text(value);
-     });
-     });
-     e.preventDefault();
-     });*/
-</script>

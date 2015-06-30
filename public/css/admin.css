@@ -2,14 +2,15 @@ body {
     padding: 0 !important;
     margin: 0 !important;
     background-color: rgba(207, 207, 207, 0.06);
+    overflow-x: hidden;
 }
 
-.nopadding {
-    padding-right: 0px !important;
-    padding-left: 0px !important;
+.container-full {
+    margin: 0 auto;
+    width: 100%;
 }
 
-a.left-admin-menu {
+.left-admin-menu a{
     font-size: 1.3em;
     color: #777 !important;
 }
@@ -23,8 +24,9 @@ hr {
 }
 
 #left-menu {
-    position: relative;
+    height: 100%;
     border-radius: 5px;
+    padding-right: 0;
     border-right: 1px solid rgba(64, 44, 44, 0.09);
     background-color: rgba(255, 255, 255, 1);
 }

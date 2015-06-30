@@ -24,6 +24,8 @@
 
     <!-- Scripts -->
     <?php echo $this->headScript()
+        ->prependFile($this->basePath() . '/js/common/ajax-redirect.js')
+        ->prependFile($this->basePath() . '/js/common/app-layout.js')
         ->prependFile($this->basePath() . '/js/bootstrap-notify/bootstrap-notify.min.js')
         ->prependFile($this->basePath() . '/js/bootstrap.min.js')
         ->prependFile($this->basePath() . '/js/jquery.min.js')
@@ -68,7 +70,11 @@
                                     <span class="caret"></span>
                                 </a>
                             <?php endif; ?>
-                            <ul id="locationList" class="dropdown-menu multi-level" role="menu"
+                            <ul id="locationList"
+                                data-url-cities="<?php echo $this->url('getCities');?>"
+                                data-url-regions="<?php echo $this->url('getRegions');?>"
+                                class="dropdown-menu multi-level"
+                                role="menu"
                                 aria-labelledby="dropdownMenu">
                                 <li><a href="#">Вся Украина</a></li>
                             </ul>
@@ -99,7 +105,11 @@
                                     <span class="caret"></span>
                                 </a>
                             <?php endif; ?>
-                            <ul id="categories" class="dropdown-menu multi-level" role="menu"
+                            <ul id="categories"
+                                data-url="<?php echo $this->url('getCategories');?>"
+                                data-url-root="<?php echo $this->url('getRootCategories');?>"
+                                class="dropdown-menu multi-level"
+                                role="menu"
                                 aria-labelledby="dropdownMenu">
                                 <li><a href="#">Все категории</a></li>
                             </ul>
@@ -154,164 +164,6 @@
     </div>
 </div>
 
-<script>
-    $(document).ready(function () {
-
-        $('#locationList').on('click', 'a', function (e) {
-            var $target = $(this);
-            var $selectWrapper = $('#selected-location');
-            var input = $('#location');
-
-            if ($target.data('city-id')) {
-                input.attr('name', 'cityId');
-                input.val($target.data('city-id'));
-            } else {
-                if ($target.data('region-id')) {
-                    input.attr('name', 'regionId');
-                    input.val($target.data('region-id'));
-                } else {
-                    input.attr('name', '');
-                    input.val('');
-                }
-            }
-
-            $selectWrapper.find('.selected').text($target.text());
-        }).on('mouseenter', 'li', function (e) {
-            var target = $(e.target),
-                dropDown = target.prev();
-
-            if (dropDown.children().length == 0 &&
-                target.data('region-id')
-            ) {
-                $.ajax({
-                    type: 'POST',
-                    url: '/getCities',
-                    dataType: 'json',
-                    data: {regionid: target.data('region-id')},
-                    success: function (data) {
-                        var cities = data.cities;
-
-                        $.each(cities, function (key, value) {
-                            var menuItem = $('<li>');
-
-                            dropDown.append(menuItem);
-                            menuItem.append(
-                                $('<a>')
-                                    .attr('href', '#')
-                                    .data('city-id', value.id)
-                                    .text(value.name)
-                            );
-
-                        });
-                    },
-                    error: function (XMLHttpRequest) {
-                        alert(XMLHttpRequest.status + ': ' + XMLHttpRequest.responseText);
-                    }
-                });
-            }
-        });
-
-        $('#categories').on('click', 'a', function (e) {
-            var $target = $(this);
-            var $selectWrapper = $('#selected-category');
-            var input = $('#categoryId');
-
-            if ($target.data('cat-id')) {
-                input.attr('name', 'categoryId');
-                input.val($target.data('cat-id'));
-            } else {
-                input.attr('name', '');
-                input.val('');
-            }
-
-
-            $selectWrapper.find('.selected').text($target.text());
-        }).on('mouseenter', 'li', function (e) {
-            var target = $(e.target),
-                dropDown = target.prev();
-
-            if (dropDown.children().length == 0 &&
-                target.data('cat-id')
-            ) {
-                $.ajax({
-                    type: 'POST',
-                    url: '/getCategories',
-                    dataType: 'json',
-                    data: {pid: target.data('cat-id')},
-                    success: function (data) {
-                        var cats = data.cats;
-
-                        $.each(cats, function (key, value) {
-                            var menuItem = $('<li>');
-
-                            dropDown.append(menuItem);
-                            menuItem.append(
-                                $('<a>')
-                                    .attr('href', '#')
-                                    .data('cat-id', value.id)
-                                    .text(value.name)
-                            );
-
-                        });
-                    },
-                    error: function (XMLHttpRequest) {
-                        alert(XMLHttpRequest.status + ': ' + XMLHttpRequest.responseText);
-                    }
-                });
-            }
-        });
-
-        $.ajax({
-            url: '/getRegions',
-            dataType: 'json',
-            success: function (data) {
-                var regions = data.regions;
-
-                $.each(regions, function (key, value) {
-                    menuItemWrapper($('#locationList'), 'region-id', value.id, value.name);
-                });
-            },
-            error: function (XMLHttpRequest) {
-                alert(XMLHttpRequest.status + ': ' + XMLHttpRequest.responseText);
-            }
-        });
-
-        $.ajax({
-            url: '/getRootCategories',
-            dataType: 'json',
-            success: function (data) {
-                var cats = data.rootCats;
-
-                $.each(cats, function (key, value) {
-                    menuItemWrapper($('#categories'), 'cat-id', value.id, value.name);
-                });
-            },
-            error: function (XMLHttpRequest) {
-                alert(XMLHttpRequest.status + ': ' + XMLHttpRequest.responseText);
-            }
-        });
-
-        function menuItemWrapper(mainWrapper, dataKey, id, text) {
-            var subMenu = $('<li>').addClass('dropdown-submenu'),
-                dropDownMenu = $('<ul>').addClass('dropdown-menu');
-
-            mainWrapper.append(subMenu);
-            subMenu.append(dropDownMenu);
-            subMenu.append(
-                $('<a>')
-                    .attr('tabindex', '-1')
-                    .data(dataKey, id)
-                    .text(text)
-            );
-        }
-
-        $(document).ajaxComplete(function (event, request) {
-            if (/^3\d{2}$/.test(request.status)) {
-                window.location.href = request.getResponseHeader('Location');
-            }
-        });
-    });
-</script>
-
+<?php echo $this->inlineScript(); ?>
 </body>
 </html>
