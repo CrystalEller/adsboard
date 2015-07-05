@@ -16,7 +16,7 @@ return array(
                     'route' => '/',
                     'defaults' => array(
                         'controller' => 'Ads\Controller\Ads',
-                        'action' => 'mainCategories',
+                        'action' => 'index',
                     ),
                 ),
             ),
