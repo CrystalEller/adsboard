@@ -10,8 +10,6 @@
     ->appendStylesheet($this->basePath() . '/css/ads-view.css')
 ?>
 
-<?php $ads = $this->ads; ?>
-
 <div class="row">
     <div class="col-lg-12 ">
         <h3><?= $ads->getTitle() ?></h3>
@@ -38,7 +36,8 @@
                     </a>
                 </h5>
                 <h5>
-                    Город: <?= $ads->getCityid()->getName() ?>
+                    Область: <?= !empty($ads->getRegionid())?$ads->getRegionid()->getName():'Вся Украина'; ?>
+                    Город: <?= !empty($ads->getCityid())?$ads->getCityid()->getName():'Все города'; ?>
                 </h5>
             </div>
             <h3 class="border-bottom">

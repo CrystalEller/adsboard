@@ -1,5 +1,5 @@
 <?php $this->inlineScript()
-    ->appendFile($this->basePath() . '/js/common/base/ads-block.js');?>
+    ->appendFile($this->basePath() . '/js/common/base/ads-block.js'); ?>
 
 <div class="panel panel-default pane">
     <div class="panel-heading">
@@ -75,10 +75,17 @@
                                 <?php endif; ?>
                             </h4>
                             <h5>
-                                <?php if (!empty($ad['cityid'])): ?>
-                                    <?= $this->escapeHtml($ad['cityid']['name']) ?>
+                                <?php if (!empty($ad['regionid'])): ?>
+                                    <?= $this->escapeHtml($ad['regionid']['name']) ?>
                                 <?php else: ?>
                                     Вся Украина
+                                <?php endif; ?>
+                            </h5>
+                            <h5>
+                                <?php if (!empty($ad['cityid'])): ?>
+                                    <?= $this->escapeHtml($ad['cityid']['name']) ?>
+                                <?php elseif (!empty($ad['regionid'])): ?>
+                                    Вся Область
                                 <?php endif; ?>
                             </h5>
                         </div>
