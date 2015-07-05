@@ -25,6 +25,7 @@ $url = $this->url(
                 <label class="control-label">Область</label>
                 <select id="region" data-url="<?php echo $this->url('getRegions');?>" name="regionId" class="form-control input-sm">
                     <?php if (!empty($this->search['regionId'])): ?>
+                        <option value="">Вся Украина</option>
                         <option value="<?= $this->search['regionId'] ?>" selected>Вся Украина</option>
                     <?php else: ?>
                         <option value="" selected>Вся Украина</option>
@@ -36,6 +37,7 @@ $url = $this->url(
                 <label class="control-label">Город</label>
                 <select id="city" data-url="<?php echo $this->url('getCities');?>" name="cityId" class="form-control input-sm">
                     <?php if (!empty($this->search['cityId'])): ?>
+                        <option value="">Вся область</option>
                         <option value="<?= $this->search['cityId'] ?>" selected>Вся область</option>
                     <?php else: ?>
                         <option value="" selected>Вся область</option>

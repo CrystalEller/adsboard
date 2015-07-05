@@ -9,13 +9,15 @@ $(document).ready(function () {
             success: function (data) {
                 var $city = $('#city');
 
-                $city.find("option[value!='']").remove();
-
                 $.each(data['cities'], function (index, value) {
-                    $('#city').append(
-                        $('<option>')
-                            .attr('value', value['id'])
-                            .text(value['name']))
+                    if (value['id'] == $city.find(":selected").val()) {
+                        $city.find(":selected").text(value['name']);
+                    } else {
+                        $('#city').append(
+                            $('<option>')
+                                .attr('value', value['id'])
+                                .text(value['name']));
+                    }
                 });
             },
             error: function (xhr) {
@@ -31,14 +33,19 @@ $(document).ready(function () {
             var $region = $('#region');
 
             $.each(data['regions'], function (index, value) {
-                $region.append(
-                    $('<option>')
-                        .attr('value', value['id'])
-                        .text(value['name']))
+                if (value['id'] == $region.find(":selected").val()) {
+                    $region.find(":selected").text(value['name']);
+                } else {
+                    $region.append(
+                        $('<option>')
+                            .attr('value', value['id'])
+                            .text(value['name']))
+                }
             });
+            $region.trigger('change');
         },
         error: function (xhr) {
             alert(xhr.status + ' ' + xhr.responseText)
         }
-    });
+    })
 });
