@@ -31,7 +31,6 @@ class UserAdsController extends AbstractActionController
             $values = $request->getPost()->toArray();
             $files = $request->getFiles()->toArray();
 
-
             if (empty($files['files'][0])) {
                 unset($values['files']);
                 $files = array();
@@ -75,8 +74,8 @@ class UserAdsController extends AbstractActionController
                     'description' => $request->getPost('description'),
                     'userid' => $this->identity()->getId(),
                     'categoryid' => end(array_values($request->getPost('category'))),
-                    'cityid' => $request->getPost('city'),
-                    'regionid' => $request->getPost('region'),
+                    'cityid' => $request->getPost('city')?:null,
+                    'regionid' => $request->getPost('region')?:null,
                     'userName' => $request->getPost('userName'),
                     'telephone' => $request->getPost('telephone')
                 );

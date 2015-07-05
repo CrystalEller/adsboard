@@ -118,16 +118,6 @@ return array(
                     ),
                 ),
             ),
-            'mainCategories' => array(
-                'type' => 'Zend\Mvc\Router\Http\Segment',
-                'options' => array(
-                    'route' => '/category',
-                    'defaults' => array(
-                        'controller' => 'Ads\Controller\Ads',
-                        'action' => 'mainCategories',
-                    )
-                ),
-            ),
             'adsByCategory' => array(
                 'type' => 'Zend\Mvc\Router\Http\Segment',
                 'options' => array(

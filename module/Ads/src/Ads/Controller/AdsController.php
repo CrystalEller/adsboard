@@ -48,30 +48,7 @@ class AdsController extends AbstractActionController
         }
     }
 
-    public function showAdsAction()
-    {
-        $adsId = $this->params('adsId', 0);
-        $em = $this->getEntityManager();
-
-        $ads = $em->find('Application\Entity\Ads', $adsId);
-
-        $props = $em->getRepository('Application\Entity\AdsValues')
-            ->findBy(array('adsid' => $adsId));
-
-        $propsGroups = array();
-
-        foreach ($props as $prop) {
-            $attrName = $prop->getValueid()->getAttrid()->getName();
-            $propsGroups[$attrName][] = $prop->getValueid()->getValue();
-        }
-
-        return new ViewModel(array(
-            'ads' => $ads,
-            'props' => $propsGroups
-        ));
-    }
-
-    public function mainCategoriesAction()
+    public function indexAction()
     {
         $request = $this->getRequest();
         $page = $request->getQuery('page', 0);
@@ -96,6 +73,40 @@ class AdsController extends AbstractActionController
             'numberAds' => $number,
             'limit' => $limit,
             'categories' => $categories
+        ));
+    }
+
+    public function showAdsAction()
+    {
+        $adsId = $this->params('adsId', 0);
+        $em = $this->getEntityManager();
+
+        $ads = $em->createQueryBuilder()
+            ->select(array('a', 'r', 'city', 'currency', 'cat'))
+            ->from('Application\Entity\Ads', 'a')
+            ->leftjoin('a.regionid', 'r')
+            ->leftjoin('a.cityid', 'city')
+            ->leftjoin('a.currencyid', 'currency')
+            ->join('a.categoryid', 'cat')
+            ->where('a.id = ?1')
+            ->orderBy('a.created')
+            ->setParameter(1, $adsId)
+            ->getQuery()
+            ->getSingleResult();
+
+        $props = $em->getRepository('Application\Entity\AdsValues')
+            ->findBy(array('adsid' => $adsId));
+
+        $propsGroups = array();
+
+        foreach ($props as $prop) {
+            $attrName = $prop->getValueid()->getAttrid()->getName();
+            $propsGroups[$attrName][] = $prop->getValueid()->getValue();
+        }
+
+        return new ViewModel(array(
+            'ads' => $ads,
+            'props' => $propsGroups
         ));
     }
 

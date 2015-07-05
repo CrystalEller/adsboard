@@ -51,7 +51,7 @@ class AdsFilter extends InputFilter implements InputFilterInterface
 
         $this->add(array(
             'name' => 'region',
-            'required' => true,
+            'required' => false,
             'validators' => array(
                 array(
                     'name' => '\DoctrineModule\Validator\ObjectExists',
@@ -68,7 +68,7 @@ class AdsFilter extends InputFilter implements InputFilterInterface
 
         $this->add(array(
             'name' => 'city',
-            'required' => true,
+            'required' => false,
             'validators' => array(
                 array(
                     'name' => '\DoctrineModule\Validator\ObjectExists',
@@ -158,6 +158,12 @@ class AdsFilter extends InputFilter implements InputFilterInterface
                     'options' => array(
                         'max' => '5MB',
                         'min' => '10kB'
+                    )
+                ),
+                array(
+                    'name' => 'Ads\Validator\FilesCountValidator',
+                    'options' => array(
+                        'max' => '9'
                     )
                 )
             )
