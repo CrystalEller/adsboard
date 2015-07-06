@@ -74,8 +74,8 @@ class UserAdsController extends AbstractActionController
                     'description' => $request->getPost('description'),
                     'userid' => $this->identity()->getId(),
                     'categoryid' => end(array_values($request->getPost('category'))),
-                    'cityid' => $request->getPost('city')?:null,
-                    'regionid' => $request->getPost('region')?:null,
+                    'cityid' => $request->getPost('city') ?: null,
+                    'regionid' => $request->getPost('region') ?: null,
                     'userName' => $request->getPost('userName'),
                     'telephone' => $request->getPost('telephone')
                 );
@@ -104,7 +104,7 @@ class UserAdsController extends AbstractActionController
 
                 return new JsonModel(array(
                     'success' => true,
-                    'redirect' => $this->url()->fromRoute('home')
+                    'redirect' => $this->url()->fromRoute('home', array('showAds' => $ads->getId()))
                 ));
             }
         }

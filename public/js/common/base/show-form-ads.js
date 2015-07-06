@@ -50,6 +50,8 @@ $(document).ready(function () {
 
         target.ajaxSubmit({
             success: function (data) {
+                clearInterval(progressInterval);
+                showProgress(100);
 
                 $('.help-block')
                     .html('')
@@ -75,12 +77,15 @@ $(document).ready(function () {
                             .find('span.help-block')
                             .html(value + '\n');
                     });
+                    $('#progress .progress-bar').width(0 + '%');
                 }
             },
             error: function (XMLHttpRequest) {
                 alert(XMLHttpRequest.status + ': ' + XMLHttpRequest.responseText);
             }
         });
+
+        startProgress();
 
         return false;
     });
@@ -146,6 +151,38 @@ $(document).ready(function () {
         addMore: true
     });
 
+    var progressInterval;
+
+    function getProgress() {
+        $.ajax({
+            url: '/upload-progress.php?id=' + $('#progress_key').val(),
+            dataType: 'json',
+            success: function (data) {
+                if (data.status && !data.status.done) {
+                    var value = Math.floor((data.status.current / data.status.total) * 100);
+                    showProgress(value);
+                } else {
+                    showProgress(100);
+                    clearInterval(progressInterval);
+                }
+            },
+            error: function (xhr) {
+                alert(xhr.status + ' ' + xhr.responseText);
+            }
+        });
+    }
+
+    function startProgress() {
+        showProgress(0);
+        progressInterval = setInterval(getProgress, 900);
+    }
+
+    function showProgress(amount) {
+        $('#progress').removeClass('hide');
+        console.log(amount);
+        $('#progress .progress-bar').width(amount + '%');
+    }
+
     function genSubcategoryElem(pCategoryId) {
         $.ajax({
             type: 'POST',
@@ -182,7 +219,7 @@ $(document).ready(function () {
                     getAttributes(pCategoryId);
                 }
             },
-            fail: function (xhr) {
+            error: function (xhr) {
                 alert(xhr.status + ' ' + xhr.responseText);
             }
         });
@@ -210,7 +247,7 @@ $(document).ready(function () {
                     });
                 }
             },
-            fail: function (xhr) {
+            error: function (xhr) {
                 alert(xhr.status + ' ' + xhr.responseText);
             }
         });
